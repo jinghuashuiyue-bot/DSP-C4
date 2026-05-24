@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数字信号处理 交互式实验</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4ecf7 100%);
+    color: #2c3e50;
+    min-height: 100vh;
+  }
+  header {
+    background: linear-gradient(90deg, #1e3c72, #2a5298);
+    color: #fff;
+    padding: 18px 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  }
+  header h1 { font-size: 22px; font-weight: 500; }
+  header .sub { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+  nav {
+    display: flex;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  nav button {
+    flex: 1;
+    padding: 14px 10px;
+    background: transparent;
+    border: none;
+    font-size: 15px;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.25s;
+    border-bottom: 3px solid transparent;
+    font-family: inherit;
+  }
+  nav button:hover { background: #f0f4fa; color: #2a5298; }
+  nav button.active {
+    color: #2a5298;
+    border-bottom-color: #2a5298;
+    background: #f0f4fa;
+    font-weight: 600;
+  }
+  .page { display: none; padding: 24px; max-width: 100%; margin: 0 auto; }
+  .page.active { display: block; }
+  .panel {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+  .panel h2 {
+    font-size: 18px;
+    color: #1e3c72;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e4ecf7;
+  }
+  .panel h3 { font-size: 15px; color: #2a5298; margin: 10px 0 8px; }
+  .seq-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .seq-tabs button {
+    padding: 8px 14px;
+    background: #eef2f7;
+    border: 1px solid #d5dde8;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .seq-tabs button:hover { background: #dde5f0; }
+  .seq-tabs button.active {
+    background: #2a5298;
+    color: #fff;
+    border-color: #2a5298;
+  }
+  .controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px 22px;
+    padding: 14px;
+    background: #f7f9fc;
+    border-radius: 8px;
+    margin-bottom: 14px;
+  }
+  .ctrl { display: flex; flex-direction: column; gap: 4px; }
+  .ctrl label {
+    font-size: 13px;
+    color: #445;
+    display: flex;
+    justify-content: space-between;
+  }
+  .ctrl label span.val { color: #2a5298; font-weight: 600; }
+  .ctrl input[type=range] { width: 100%; accent-color: #2a5298; }
+  .ctrl input[type=number], .ctrl input[type=text], .ctrl select {
+    padding: 6px 8px;
+    border: 1px solid #cfd6e0;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .page-layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+  .sidebar {
+    position: sticky;
+    top: 72px;
+    align-self: start;
+    width: 100%;
+  }
+  .sidebar .panel {
+    margin-bottom: 0;
+    padding: 14px;
+    height: calc(100vh - 106px);
+    overflow: auto;
+  }
+  .sidebar h2 { margin-bottom: 10px; font-size: 16px; }
+  .page1-main {
+    min-width: 0;
+  }
+  .seq-select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #cfd6e0;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    margin-bottom: 10px;
+    background: #fff;
+  }
+  .plots {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .plots .full { grid-column: 1/-1; }
+  .plot { min-height: 300px; background: #fafbfd; border-radius: 6px; }
+  .plots.compact .plot { min-height: 240px; }
+  .plots.compact .plot.full { min-height: 280px; }
+  .plots.compact .plot.large { min-height: 380px; }
+  .formula {
+    background: #f4f7fb;
+    border-left: 4px solid #2a5298;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-family: "Consolas", monospace;
+    font-size: 13px;
+    color: #334;
+  }
+  .note {
+    background: #fff7e6;
+    border-left: 4px solid #f0a500;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #664;
+    margin: 10px 0;
+  }
+  /* 针对第三页微调图表容器，保证比例协调 */
+  #page3 .plot {
+    width: 100%;
+    overflow: hidden;
+  }
+  @media (max-width: 800px) {
+    .plots { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>数字信号处理 · 交互实验平台</h1>
+  <div class="sub">交控2401 · 李家荣 · DTFT / DFT / 圆周卷积 / 频域采样定理</div>
+</header>
+
+<nav>
+  <button class="nav-btn active" data-page="page1">一、DTFT 与 DFT 对比</button>
+  <button class="nav-btn" data-page="page2">二、圆周移位与圆周卷积</button>
+  <button class="nav-btn" data-page="page3">三、频域采样与重构</button>
+</nav>
+
+<section class="page active" id="page1">
+  <div class="page-layout">
+    <aside class="sidebar">
+      <div class="panel">
+        <h2>参数调节</h2>
+        <div class="formula">
+          第一页提供 7 种典型序列，参数会随所选序列自动切换。
+        </div>
+        <select class="seq-select" id="seqSelect">
+          <option value="impulse">单位冲激 δ(n-n₀)</option>
+          <option value="step">单位阶跃 u(n)</option>
+          <option value="rect">矩形 R<sub>N</sub>(n)</option>
+          <option value="realexp">实指数 aⁿu(n)</option>
+          <option value="complexexp">复指数 e<sup>jω₀n</sup></option>
+          <option value="sine">正弦 sin(ω₀n+φ)</option>
+          <option value="custom">自定义序列</option>
+        </select>
+
+        <div class="controls" id="seqControls"></div>
+      </div>
+    </aside>
+    <div class="page1-main">
+      <div class="panel">
+        <h2>七种典型序列的 DTFT 与 DFT</h2>
+        <div class="formula">
+          DTFT: X(e<sup>jω</sup>) = Σ<sub>n</sub> x(n)·e<sup>-jωn</sup> &nbsp;&nbsp;|&nbsp;&nbsp;
+          DFT: X(k) = Σ<sub>n=0</sub><sup>N-1</sup> x(n)·e<sup>-j2πkn/N</sup>
+        </div>
+
+        <div class="plots">
+          <div class="plot full" id="p1_time"></div>
+          <div class="plot" id="p1_dtft_mag"></div>
+          <div class="plot" id="p1_dtft_phase"></div>
+          <div class="plot" id="p1_dft_mag"></div>
+          <div class="plot" id="p1_dft_phase"></div>
+        </div>
+        <div class="note">
+          <b>时频双域延拓观察：</b>时域与频域图表已同步扩展。在时域中，实心点代表 DTFT 对应的非周期原序列（补零延拓）；空心红圈代表 DFT 隐含的时域周期延拓 $\tilde{x}(n)$。与之对应，在频域中 DFT（红点）也表现为 DTFT（蓝线）的周期延拓采样。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="page" id="page2">
+  <div class="panel">
+    <h2>圆周移位 Circular Shift</h2>
+    <div class="formula">y(n) = x((n - m))<sub>N</sub> · R<sub>N</sub>(n)，即将 x(n) 以 N 为周期延拓后再取主值</div>
+    <div class="controls">
+      <div class="ctrl">
+        <label>序列 x(n)（逗号分隔）</label>
+        <input type="text" id="cs_seq" value="1,2,3,4,5,6">
+      </div>
+      <div class="ctrl">
+        <label>移位点数 m <span class="val" id="cs_m_v">2</span></label>
+        <input type="range" id="cs_m" min="-10" max="10" step="1" value="2">
+      </div>
+      <div class="ctrl">
+        <label>周期 N <span class="val" id="cs_N_v">6</span></label>
+        <input type="range" id="cs_N" min="2" max="16" step="1" value="6">
+      </div>
+    </div>
+    <div class="plots compact">
+      <div class="plot" id="p2_orig"></div>
+      <div class="plot" id="p2_shifted"></div>
+      <div class="plot full" id="p2_periodic"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>圆周卷积 Circular Convolution</h2>
+    <div class="formula">
+      y(n) = x(n) Ⓝ h(n) = Σ<sub>m=0</sub><sup>N-1</sup> x(m)·h((n-m))<sub>N</sub>·R<sub>N</sub>(n)
+    </div>
+    <div class="controls">
+      <div class="ctrl">
+        <label>序列 x(n)</label>
+        <input type="text" id="cv_x" value="1,2,3,4">
+      </div>
+      <div class="ctrl">
+        <label>序列 h(n)</label>
+        <input type="text" id="cv_h" value="4,3,2,1">
+      </div>
+      <div class="ctrl">
+        <label>卷积长度 N <span class="val" id="cv_N_v">4</span></label>
+        <input type="range" id="cv_N" min="2" max="16" step="1" value="4">
+      </div>
+    </div>
+    <div class="plots compact">
+      <div class="plot" id="p2_x"></div>
+      <div class="plot" id="p2_h"></div>
+      <div class="plot full" id="p2_conv_2d"></div>
+      <div class="plot full large" id="p2_conv_3d"></div>
+    </div>
+    <div class="note">
+      3D 图展示了 h((n-m))<sub>N</sub> 随 n 的滑动过程：每行对应一个 n 的取值，
+      将该行与 x(m) 逐点相乘求和即得圆周卷积 y(n)。
+    </div>
+  </div>
+</section>
+
+<section class="page" id="page3">
+  <div class="panel">
+    <h2>频域采样定理验证</h2>
+    <div class="formula">
+      对长度为 M 的 x(n)，其 DTFT 为 X(e<sup>jω</sup>)，在 [0,2π) 取 N 点采样 X(k) = X(e<sup>j2πk/N</sup>)。<br>
+      IDFT[X(k)] = x<sub>N</sub>(n) = Σ<sub>r</sub> x(n+rN) · R<sub>N</sub>(n)，即 x(n) 以 N 为周期延拓后的主值。<br>
+      无混叠条件：N ≥ M
+    </div>
+    <div class="controls">
+      <div class="ctrl">
+        <label>原序列类型</label>
+        <select id="fs_type">
+          <option value="rect">矩形序列 R<sub>M</sub>(n)</option>
+          <option value="triangle">三角序列</option>
+          <option value="realexp">实指数 0.8ⁿ</option>
+          <option value="cos">余弦 cos(0.3πn)</option>
+        </select>
+      </div>
+      <div class="ctrl">
+        <label>原序列长度 M <span class="val" id="fs_M_v">8</span></label>
+        <input type="range" id="fs_M" min="2" max="32" step="1" value="8">
+      </div>
+      <div class="ctrl">
+        <label>频域采样点数 N <span class="val" id="fs_N_v">16</span></label>
+        <input type="range" id="fs_N" min="2" max="64" step="1" value="16">
+      </div>
+      <div class="ctrl">
+        <label>插值重构密度 L <span class="val" id="fs_L_v">512</span></label>
+        <input type="range" id="fs_L" min="128" max="1024" step="64" value="512">
+      </div>
+    </div>
+    <div class="plots">
+      <div class="plot full" id="p3_orig"></div>
+      <div class="plot full" id="p3_periodic"></div>
+      <div class="plot" id="p3_dtft_mag"></div>
+      <div class="plot" id="p3_dft_samp"></div>
+      <div class="plot full" id="p3_reconstruct"></div>
+    </div>
+    <div class="note">
+      <b>观察：</b>当 N &lt; M 时，时域出现周期延拓混叠，重构的 DTFT 与原 DTFT 不一致；
+      当 N ≥ M 时，x<sub>N</sub>(n) 的主值即原 x(n)，由 X(k) 可通过内插公式精确恢复 X(e<sup>jω</sup>)。
+      <br><b>内插公式：</b> X(e<sup>jω</sup>) = Σ<sub>k=0</sub><sup>N-1</sup> X(k)·Φ(ω - 2πk/N)，
+      Φ(ω) = (1/N)·sin(ωN/2)/sin(ω/2)·e<sup>-jω(N-1)/2</sup>
+    </div>
+  </div>
+</section>
+
+<script>
+/* ======================================================
+   工具函数：复数运算 / DTFT / DFT
+   ====================================================== */
+function cAdd(a,b){return [a[0]+b[0], a[1]+b[1]];}
+function cMul(a,b){return [a[0]*b[0]-a[1]*b[1], a[0]*b[1]+a[1]*b[0]];}
+
+// DTFT on array of ω
+function computeDTFT(x, n0, omegas) {
+  const isComplex = Array.isArray(x[0]);
+  const mags=[], phases=[];
+  for (const w of omegas) {
+    let re=0, im=0;
+    for (let i=0;i<x.length;i++){
+      const n = n0 + i;
+      const c = Math.cos(-w*n), s = Math.sin(-w*n);
+      const xr = isComplex? x[i][0] : x[i];
+      const xi = isComplex? x[i][1] : 0;
+      re += xr*c - xi*s;
+      im += xr*s + xi*c;
+    }
+    mags.push(Math.sqrt(re*re+im*im));
+    phases.push(Math.atan2(im,re));
+  }
+  return {mags, phases};
+}
+
+// DFT: returns complex array of length N
+function computeDFT(x) {
+  const N = x.length;
+  const isComplex = Array.isArray(x[0]);
+  const X = [];
+  for (let k=0;k<N;k++){
+    let re=0, im=0;
+    for (let n=0;n<N;n++){
+      const ang = -2*Math.PI*k*n/N;
+      const c = Math.cos(ang), s = Math.sin(ang);
+      const xr = isComplex? x[n][0] : x[n];
+      const xi = isComplex? x[n][1] : 0;
+      re += xr*c - xi*s;
+      im += xr*s + xi*c;
+    }
+    X.push([re,im]);
+  }
+  return X;
+}
+
+function magOf(C){return C.map(c=>Math.sqrt(c[0]*c[0]+c[1]*c[1]));}
+function phaseOf(C){return C.map(c=>{
+  const m = Math.sqrt(c[0]*c[0]+c[1]*c[1]);
+  return m<1e-10? 0 : Math.atan2(c[1],c[0]);
+});}
+
+/* ======================================================
+   导航
+   ====================================================== */
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.page).classList.add('active');
+    if (btn.dataset.page==='page2') { renderCS(); renderCV(); }
+    if (btn.dataset.page==='page3') renderFS();
+  });
+});
+
+/* ======================================================
+   第一页：七种序列的 DTFT 与 DFT
+   ====================================================== */
+const NFREQ = 1000;   
+const W_MIN = -2 * Math.PI;
+const W_MAX = 4 * Math.PI;
+const OMEGAS = Array.from({length:NFREQ}, (_,i)=> W_MIN + (W_MAX - W_MIN)*i/(NFREQ-1));
+
+let currentSeq = 'impulse';
+
+const seqControlDefs = {
+  impulse: [
+    {id:'imp_n0', label:'位置 n₀', min:-10, max:10, step:1, val:0},
+    {id:'imp_N',  label:'DFT 长度 N', min:4, max:64, step:1, val:16}
+  ],
+  step: [
+    {id:'stp_L', label:'观测长度 L', min:4, max:32, step:1, val:12},
+    {id:'stp_N', label:'DFT 长度 N', min:4, max:64, step:1, val:16}
+  ],
+  rect: [
+    {id:'rec_M', label:'矩形宽度 M', min:1, max:32, step:1, val:8},
+    {id:'rec_N', label:'DFT 长度 N', min:4, max:64, step:1, val:16}
+  ],
+  realexp: [
+    {id:'re_a',  label:'底数 a', min:-0.99, max:0.99, step:0.01, val:0.8},
+    {id:'re_L',  label:'观测长度 L', min:4, max:64, step:1, val:16},
+    {id:'re_N',  label:'DFT 长度 N', min:4, max:128, step:1, val:16}
+  ],
+  complexexp: [
+    {id:'ce_w0', label:'ω₀/π', min:0, max:2, step:0.01, val:0.25},
+    {id:'ce_L',  label:'观测长度 L', min:4, max:64, step:1, val:16},
+    {id:'ce_N',  label:'DFT 长度 N', min:4, max:128, step:1, val:16}
+  ],
+  sine: [
+    {id:'sn_w0', label:'ω₀/π', min:0, max:1, step:0.01, val:0.25},
+    {id:'sn_ph', label:'相位 φ (rad)', min:-3.14, max:3.14, step:0.01, val:0},
+    {id:'sn_L',  label:'观测长度 L', min:4, max:64, step:1, val:16},
+    {id:'sn_N',  label:'DFT 长度 N', min:4, max:128, step:1, val:16}
+  ],
+  custom: [
+    {id:'cu_vals', label:'序列值（逗号分隔）', type:'text', val:'1,0.5,-0.5,1,0.8,-0.3,0.2'},
+    {id:'cu_n0',   label:'起始 n₀', min:-10, max:10, step:1, val:0},
+    {id:'cu_N',    label:'DFT 长度 N', min:4, max:128, step:1, val:16}
+  ]
+};
+
+function buildControls(seq) {
+  const host = document.getElementById('seqControls');
+  host.innerHTML = '';
+  seqControlDefs[seq].forEach(def=>{
+    const div = document.createElement('div');
+    div.className = 'ctrl';
+    if (def.type==='text') {
+      div.innerHTML = `<label>${def.label}</label><input type="text" id="${def.id}" value="${def.val}">`;
+    } else {
+      div.innerHTML = `<label>${def.label} <span class="val" id="${def.id}_v">${def.val}</span></label>
+        <input type="range" id="${def.id}" min="${def.min}" max="${def.max}" step="${def.step}" value="${def.val}">`;
+    }
+    host.appendChild(div);
+  });
+  seqControlDefs[seq].forEach(def=>{
+    const el = document.getElementById(def.id);
+    el.addEventListener('input', ()=>{
+      if (def.type!=='text') document.getElementById(def.id+'_v').textContent = el.value;
+      renderSeq();
+    });
+  });
+  renderSeq();
+}
+
+function setSeqType(seq) {
+  currentSeq = seq;
+  buildControls(seq);
+}
+
+document.getElementById('seqSelect').addEventListener('change', (e)=>{
+  setSeqType(e.target.value);
+});
+
+function getV(id){ return +document.getElementById(id).value; }
+function getT(id){ return document.getElementById(id).value; }
+
+function generateSequence(seq) {
+  let x, n0, N, isComplex=false;
+  switch(seq){
+    case 'impulse': {
+      const n0v = getV('imp_n0'); N = getV('imp_N');
+      n0 = Math.min(-2, n0v-2);
+      const nEnd = Math.max(2, n0v+2);
+      x = [];
+      for (let n=n0;n<=nEnd;n++) x.push(n===n0v ? 1 : 0);
+      break;
+    }
+    case 'step': {
+      const L = getV('stp_L'); N = getV('stp_N');
+      n0 = -2;
+      x = [];
+      for (let n=n0;n<L;n++) x.push(n>=0 ? 1 : 0);
+      break;
+    }
+    case 'rect': {
+      const M = getV('rec_M'); N = getV('rec_N');
+      n0 = -2;
+      x = [];
+      for (let n=n0;n<M+2;n++) x.push(n>=0 && n<M ? 1 : 0);
+      break;
+    }
+    case 'realexp': {
+      const a = getV('re_a'); const L = getV('re_L'); N = getV('re_N');
+      n0 = 0;
+      x = [];
+      for (let n=0;n<L;n++) x.push(Math.pow(a,n));
+      break;
+    }
+    case 'complexexp': {
+      const w0 = getV('ce_w0')*Math.PI;
+      const L = getV('ce_L'); N = getV('ce_N');
+      n0 = 0;
+      x = [];
+      isComplex = true;
+      for (let n=0;n<L;n++) x.push([Math.cos(w0*n), Math.sin(w0*n)]);
+      break;
+    }
+    case 'sine': {
+      const w0 = getV('sn_w0')*Math.PI;
+      const ph = getV('sn_ph');
+      const L = getV('sn_L'); N = getV('sn_N');
+      n0 = 0;
+      x = [];
+      for (let n=0;n<L;n++) x.push(Math.sin(w0*n+ph));
+      break;
+    }
+    case 'custom': {
+      const vals = getT('cu_vals').split(/[,\s]+/).map(Number).filter(v=>!isNaN(v));
+      n0 = getV('cu_n0'); N = getV('cu_N');
+      x = vals.length? vals : [0];
+      break;
+    }
+  }
+  return {x, n0, N, isComplex};
+}
+
+function renderSeq(){
+  const {x, n0, N, isComplex} = generateSequence(currentSeq);
+  let xN = [];
+  for (let i=0;i<N;i++){
+    if (isComplex) {
+      if (i<x.length) xN.push(x[i]); else xN.push([0,0]);
+    } else {
+      if (i<x.length) xN.push(x[i]); else xN.push(0);
+    }
+  }
+  const displayN = Math.min(N, 64); 
+  const min_n = Math.min(-displayN, n0 - 2);
+  const max_n = Math.max(2 * displayN, n0 + x.length + 2);
+  const ns = [];
+  for(let n = min_n; n <= max_n; n++) ns.push(n);
+  const x_orig = ns.map(n => {
+    let idx = n - n0;
+    if(idx >= 0 && idx < x.length) return isComplex ? x[idx] : [x[idx], 0];
+    return [0, 0];
+  });
+  const x_tilde = ns.map(n => {
+    let idx = ((n - n0) % N + N) % N;
+    return isComplex ? xN[idx] : [xN[idx], 0];
+  });
+  let timeData = [];
+  if (isComplex) {
+    timeData.push({x: ns, y: x_tilde.map(v=>v[0]), type:'scatter', mode:'markers', name:'DFT 延拓 Re', marker:{color:'#3498db', size:4, symbol:'circle-open'}});
+    timeData.push({x: ns, y: x_tilde.map(v=>v[1]), type:'scatter', mode:'markers', name:'DFT 延拓 Im', marker:{color:'#e74c3c', size:4, symbol:'circle-open'}});
+    timeData.push({x: ns, y: x_orig.map(v=>v[0]), type:'scatter', mode:'lines+markers', name:'原序列 Re', line:{color:'#2a5298', width:1.2}, marker:{size:5}});
+    timeData.push({x: ns, y: x_orig.map(v=>v[1]), type:'scatter', mode:'lines+markers', name:'原序列 Im', line:{color:'#c0392b', width:1.2}, marker:{size:5}});
+    ns.forEach((n, i) => {
+      let v_orig = x_orig[i];
+      let v_tilde = x_tilde[i];
+      timeData.push({x:[n,n], y:[0,v_tilde[0]], type:'scatter', mode:'lines', line:{color:'#3498db',width:1, dash:'dot'}, showlegend:false, hoverinfo:'skip'});
+      timeData.push({x:[n,n], y:[0,v_tilde[1]], type:'scatter', mode:'lines', line:{color:'#e74c3c',width:1, dash:'dot'}, showlegend:false, hoverinfo:'skip'});
+      timeData.push({x:[n,n], y:[0,v_orig[0]], type:'scatter', mode:'lines', line:{color:'#2a5298',width:2}, showlegend:false, hoverinfo:'skip'});
+      timeData.push({x:[n,n], y:[0,v_orig[1]], type:'scatter', mode:'lines', line:{color:'#c0392b',width:2, dash:'dot'}, showlegend:false, hoverinfo:'skip'});
+    });
+  } else {
+    timeData.push({x: ns, y: x_tilde.map(v=>v[0]), type:'scatter', mode:'markers', name:'DFT 隐含的周期延拓', marker:{color:'#e74c3c', size:7, symbol:'circle-open', opacity: 0.8}});
+    timeData.push({x: ns, y: x_orig.map(v=>v[0]), type:'scatter', mode:'markers', name:'原序列 x(n)', marker:{color:'#2a5298', size:9}});
+    ns.forEach((n, i) => {
+      let v_orig = x_orig[i][0];
+      let v_tilde = x_tilde[i][0];
+      timeData.push({x:[n,n], y:[0,v_tilde], type:'scatter', mode:'lines', line:{color:'#e74c3c',width:1, dash:'dot'}, showlegend:false, hoverinfo:'skip'});
+      timeData.push({x:[n,n], y:[0,v_orig], type:'scatter', mode:'lines', line:{color:'#2a5298',width:2}, showlegend:false, hoverinfo:'skip'});
+    });
+  }
+  Plotly.newPlot('p1_time', timeData, {
+    title:'时域序列 x(n) 及其与 DFT 对应的时域周期延拓',
+    xaxis:{title:'n', zeroline:true, gridcolor:'#eee', range: [min_n - 0.5, max_n + 0.5]},
+    yaxis:{title:'幅值', zeroline:true, gridcolor:'#eee'},
+    height:330, margin:{t:50,b:45,l:55,r:20},
+    plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff',
+    legend:{orientation:'h', y:1.15}
+  }, {responsive:true, displayModeBar:false});
+
+  const {mags:dtftMag, phases:dtftPh} = computeDTFT(x, n0, OMEGAS);
+  const wAxis = OMEGAS.map(w=>w/Math.PI);
+  const X = computeDFT(xN);
+  const extended_kW = [];
+  const extended_dftMag = [];
+  const extended_dftPh = [];
+  for (let k = -N; k <= 2 * N; k++) {
+    const idx = ((k % N) + N) % N; 
+    const c = X[idx];
+    const mag = Math.sqrt(c[0]*c[0] + c[1]*c[1]);
+    const ph = mag < 1e-10 ? 0 : Math.atan2(c[1], c[0]);
+    extended_kW.push(2 * k / N);
+    extended_dftMag.push(mag);
+    extended_dftPh.push(ph);
+  }
+  const dftMag = extended_dftMag;
+  const dftPh = extended_dftPh;
+  const kW = extended_kW;
+  let dtftMag2 = dtftMag.slice();
+  let dtftPh2 = dtftPh.slice();
+  if (n0 !== 0) {
+    for (let i=0;i<OMEGAS.length;i++){
+      dtftPh2[i] = dtftPh[i] + OMEGAS[i]*n0;
+      while (dtftPh2[i] > Math.PI) dtftPh2[i] -= 2*Math.PI;
+      while (dtftPh2[i] < -Math.PI) dtftPh2[i] += 2*Math.PI;
+    }
+  }
+  const wRange = [-2.2, 4.2];
+  Plotly.newPlot('p1_dtft_mag', [
+    {x:wAxis, y:dtftMag2, type:'scatter', mode:'lines', name:'|X(e^jω)|', line:{color:'#2a5298',width:1.2}},
+    {x:kW, y:dftMag, type:'scatter', mode:'markers', name:'|X(k)| (周期延拓)', marker:{color:'#e74c3c',size:5}}
+  ], {
+    title:'幅度谱对比（单击图注可隐藏）',
+    xaxis:{title:'ω / π', gridcolor:'#eee', range: wRange},
+    yaxis:{title:'|X|', gridcolor:'#eee'},
+    height:290, margin:{t:40,b:45,l:55,r:20},
+    plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff',
+    legend:{orientation:'h', y:1.12}
+  }, {responsive:true, displayModeBar:false});
+  Plotly.newPlot('p1_dtft_phase', [
+    {x:wAxis, y:dtftPh2, type:'scatter', mode:'lines', name:'∠X(e^jω)', line:{color:'#2a5298',width:1.2}},
+    {x:kW, y:dftPh, type:'scatter', mode:'markers', name:'∠X(k) (周期延拓)', marker:{color:'#e74c3c',size:5}}
+  ], {
+    title:'相位谱对比（单击图注可隐藏）',
+    xaxis:{title:'ω / π', gridcolor:'#eee', range: wRange},
+    yaxis:{title:'相位 (rad)', gridcolor:'#eee'},
+    height:290, margin:{t:40,b:45,l:55,r:20},
+    plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff',
+    legend:{orientation:'h', y:1.12}
+  }, {responsive:true, displayModeBar:false});
+  const dftStemMag = [];
+  dftMag.forEach((v,i)=>{
+    dftStemMag.push({x:[kW[i],kW[i]], y:[0,v], type:'scatter', mode:'lines', line:{color:'#e74c3c',width:1.2}, showlegend:false, hoverinfo:'skip'});
+  });
+  dftStemMag.push({x:kW, y:dftMag, type:'scatter', mode:'markers', name:'|X(k)|', marker:{color:'#e74c3c',size:5}});
+  Plotly.newPlot('p1_dft_mag', dftStemMag, {
+    title:`N=${N} 点 DFT 周期延拓幅度谱 |X(k)|`,
+    xaxis:{title:'ω/π = 2k/N', gridcolor:'#eee', range: wRange},
+    yaxis:{title:'|X(k)|', gridcolor:'#eee'},
+    height:290, margin:{t:40,b:45,l:55,r:20},
+    plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff'
+  }, {responsive:true, displayModeBar:false});
+  const dftStemPh = [];
+  dftPh.forEach((v,i)=>{
+    dftStemPh.push({x:[kW[i],kW[i]], y:[0,v], type:'scatter', mode:'lines', line:{color:'#8e44ad',width:1.2}, showlegend:false, hoverinfo:'skip'});
+  });
+  dftStemPh.push({x:kW, y:dftPh, type:'scatter', mode:'markers', name:'∠X(k)', marker:{color:'#8e44ad',size:5}});
+  Plotly.newPlot('p1_dft_phase', dftStemPh, {
+    title:`N=${N} 点 DFT 周期延拓相位谱 ∠X(k)`,
+    xaxis:{title:'ω/π = 2k/N', gridcolor:'#eee', range: wRange},
+    yaxis:{title:'相位 (rad)', gridcolor:'#eee'},
+    height:290, margin:{t:40,b:45,l:55,r:20},
+    plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff'
+  }, {responsive:true, displayModeBar:false});
+}
+
+/* 第二页函数 (保持原样) */
+function parseSeq(str) { return str.split(/[,\s]+/).map(Number).filter(v=>!isNaN(v)); }
+function circularShift(x, m, N) {
+  const xN = Array(N).fill(0);
+  for (let i=0;i<Math.min(x.length,N);i++) xN[i] = x[i];
+  const y = Array(N).fill(0);
+  for (let n=0;n<N;n++){ let idx = ((n - m) % N + N) % N; y[n] = xN[idx]; }
+  return {xN, y};
+}
+function stemPlot(elId, ns, vals, title, color) {
+  const traces = [];
+  vals.forEach((v,i)=>{ traces.push({x:[ns[i],ns[i]], y:[0,v], type:'scatter', mode:'lines', line:{color:color,width:2}, showlegend:false, hoverinfo:'skip'}); });
+  traces.push({x:ns, y:vals, type:'scatter', mode:'markers', marker:{color:color,size:9}, showlegend:false});
+  Plotly.newPlot(elId, traces, { title, xaxis:{title:'n', gridcolor:'#eee', dtick:1}, yaxis:{title:'幅值', gridcolor:'#eee'}, height:280, width:600, margin:{t:40,b:45,l:55,r:20}, plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff' }, {responsive:true, displayModeBar:false});
+}
+function renderCS(){
+  const x = parseSeq(document.getElementById('cs_seq').value);
+  const m = +document.getElementById('cs_m').value;
+  const N = +document.getElementById('cs_N').value;
+  document.getElementById('cs_m_v').textContent = m;
+  document.getElementById('cs_N_v').textContent = N;
+  const {xN, y} = circularShift(x, m, N);
+  const ns = Array.from({length:N},(_,i)=>i);
+  stemPlot('p2_orig', ns, xN, `原序列 x(n)，长度 N=${N}`, '#2a5298');
+  stemPlot('p2_shifted', ns, y, `圆周移位 y(n) = x((n-${m}))_${N}·R_${N}(n)`, '#e67e22');
+  const periods = 3;
+  const nExt = []; const xExt = [];
+  for (let p=-1;p<=1;p++){ for (let n=0;n<N;n++){ nExt.push(n + p*N); xExt.push(xN[n]); } }
+  const shiftedExt = nExt.map(n=>{ const idx = ((n - m) % N + N) % N; return xN[idx]; });
+  const traces = [
+    {x:nExt, y:xExt, type:'scatter', mode:'markers', name:'周期延拓 x~(n)', marker:{color:'#2a5298',size:7, opacity:0.6}},
+    {x:nExt, y:shiftedExt, type:'scatter', mode:'markers', name:`线性移位 x~(n-${m})`, marker:{color:'#e67e22',size:7, opacity:0.4, symbol:'square'}}
+  ];
+  traces.push({x:[0,0], y:[-1e3,1e3], type:'scatter', mode:'lines', line:{color:'#888',dash:'dash',width:1}, showlegend:false, hoverinfo:'skip'});
+  traces.push({x:[N-1,N-1], y:[-1e3,1e3], type:'scatter', mode:'lines', line:{color:'#888',dash:'dash',width:1}, showlegend:false, hoverinfo:'skip'});
+  xExt.forEach((v,i)=>{ traces.push({x:[nExt[i],nExt[i]], y:[0,v], type:'scatter', mode:'lines', line:{color:'#2a5298',width:1,dash:'dot'}, showlegend:false, hoverinfo:'skip'}); });
+  const maxAbs = Math.max(...xN.map(Math.abs),1);
+  Plotly.newPlot('p2_periodic', traces, { title:'周期延拓视角：虚线之间为主值区间 R_N(n)', xaxis:{title:'n', gridcolor:'#eee', dtick:1}, yaxis:{title:'幅值', gridcolor:'#eee', range:[-maxAbs*1.3, maxAbs*1.3]}, height:280, margin:{t:40,b:45,l:55,r:20}, plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff', legend:{orientation:'h', y:1.12} }, {responsive:true, displayModeBar:false});
+}
+['cs_seq','cs_m','cs_N'].forEach(id=>{ document.getElementById(id).addEventListener('input', renderCS); });
+function circularConv(x, h, N) {
+  const xN = Array(N).fill(0), hN = Array(N).fill(0);
+  for (let i=0;i<Math.min(x.length,N);i++) xN[i]=x[i];
+  for (let i=0;i<Math.min(h.length,N);i++) hN[i]=h[i];
+  const y = Array(N).fill(0);
+  const hShiftMat = []; 
+  for (let n=0;n<N;n++){ const row = Array(N).fill(0); for (let m=0;m<N;m++){ const idx = ((n - m) % N + N) % N; row[m] = hN[idx]; y[n] += xN[m]*row[m]; } hShiftMat.push(row); }
+  return {xN, hN, y, hShiftMat};
+}
+function renderCV(){
+  const x = parseSeq(document.getElementById('cv_x').value);
+  const h = parseSeq(document.getElementById('cv_h').value);
+  const N = +document.getElementById('cv_N').value;
+  document.getElementById('cv_N_v').textContent = N;
+  const {xN, hN, y, hShiftMat} = circularConv(x, h, N);
+  const ns = Array.from({length:N},(_,i)=>i);
+  stemPlot('p2_x', ns, xN, `x(n)，补零至 N=${N}`, '#2a5298');
+  stemPlot('p2_h', ns, hN, `h(n)，补零至 N=${N}`, '#27ae60');
+  stemPlot('p2_conv_2d', ns, y, `圆周卷积 y(n) = x(n) ⊛_${N} h(n)`, '#e74c3c');
+  const zMat = [];
+  for (let n=0;n<N;n++){ const row = []; for (let m=0;m<N;m++){ row.push(xN[m] * hShiftMat[n][m]); } zMat.push(row); }
+  Plotly.newPlot('p2_conv_3d', [{ z: zMat, x: ns, y: ns, type:'surface', colorscale:'Viridis', showscale:true, contours:{z:{show:true, usecolormap:true, highlightcolor:"#fff", project:{z:true}}} }], { title:'3D：x(m)·h((n-m))_N 曲面，沿 m 求和得 y(n)', scene:{ xaxis:{title:'m'}, yaxis:{title:'n'}, zaxis:{title:'x(m)·h((n-m))_N'}, camera:{eye:{x:1.5,y:-1.5,z:1.2}} }, height:380, margin:{t:40,b:10,l:10,r:10}, paper_bgcolor:'#fff' }, {responsive:true, displayModeBar:false});
+}
+['cv_x','cv_h','cv_N'].forEach(id=>{ document.getElementById(id).addEventListener('input', renderCV); });
+
+/* ======================================================
+   第三页：频域采样与重构 (修正比例：统一协调高度)
+   ====================================================== */
+function genFsSource(type, M) {
+  const x = [];
+  switch(type){
+    case 'rect': for(let n=0;n<M;n++) x.push(1); break;
+    case 'triangle': for(let n=0;n<M;n++) x.push(1 - Math.abs(n - (M-1)/2)/((M-1)/2 + 1e-9)); break;
+    case 'realexp': for(let n=0;n<M;n++) x.push(Math.pow(0.8,n)); break;
+    case 'cos': for(let n=0;n<M;n++) x.push(Math.cos(0.3*Math.PI*n)); break;
+  }
+  return x;
+}
+function IDFT(X) {
+  const N = X.length;
+  const x = [];
+  for (let n=0;n<N;n++){
+    let re=0, im=0;
+    for (let k=0;k<N;k++){ const ang = 2*Math.PI*k*n/N; const c = Math.cos(ang), s = Math.sin(ang); re += X[k][0]*c - X[k][1]*s; im += X[k][0]*s + X[k][1]*c; }
+    x.push([re/N, im/N]);
+  }
+  return x;
+}
+function renderFS(){
+  const type = document.getElementById('fs_type').value;
+  const M = +document.getElementById('fs_M').value;
+  const N = +document.getElementById('fs_N').value;
+  const L = +document.getElementById('fs_L').value;
+  document.getElementById('fs_M_v').textContent = M;
+  document.getElementById('fs_N_v').textContent = N;
+  document.getElementById('fs_L_v').textContent = L;
+
+  const x = genFsSource(type, M);
+  const nsOrig = x.map((_,i)=>i);
+  const stemTraces1 = [];
+  x.forEach((v,i)=>stemTraces1.push({x:[i,i], y:[0,v], type:'scatter', mode:'lines', line:{color:'#2a5298',width:2}, showlegend:false, hoverinfo:'skip'}));
+  stemTraces1.push({x:nsOrig, y:x, type:'scatter', mode:'markers', marker:{color:'#2a5298',size:8}, name:'x(n)'});
+  Plotly.newPlot('p3_orig', stemTraces1, { title:`原序列 x(n)，长度 M=${M}`, xaxis:{title:'n', gridcolor:'#eee', dtick:1}, yaxis:{title:'幅值', gridcolor:'#eee'}, height:280, margin:{t:35,b:30,l:45,r:30}, plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff' }, {responsive:true, displayModeBar:false});
+
+  const xNsum = Array(N).fill(0);
+  const contribTraces = [];
+  const colors = ['#3498db','#27ae60','#e67e22','#9b59b6','#16a085'];
+  let rCount = 0;
+  const maxR = Math.ceil(M/N) + 2;
+  for (let r=-maxR;r<=maxR;r++){
+    const contribX = [], contribY = [];
+    for (let n=0;n<N;n++){ const idx = n + r*N; if (idx>=0 && idx<M) { xNsum[n] += x[idx]; contribX.push(n); contribY.push(x[idx]); } }
+    if (contribX.length){
+      contribTraces.push({x:contribX, y:contribY, type:'scatter', mode:'markers', name:`r=${r} 的贡献 x(n+${r}N)`, marker:{color:colors[rCount%colors.length], size:7, symbol:r===0?'circle':'x'}, opacity:0.7});
+      rCount++;
+    }
+  }
+  const stemSum = [];
+  xNsum.forEach((v,i)=>stemSum.push({x:[i,i], y:[0,v], type:'scatter', mode:'lines', line:{color:'#c0392b',width:2}, showlegend:false, hoverinfo:'skip'}));
+  stemSum.push({x:nsOrig.slice(0,N).concat(Array.from({length:Math.max(N-nsOrig.length,0)},(_,i)=>i+nsOrig.length)), y:xNsum, type:'scatter', mode:'markers', marker:{color:'#c0392b',size:9}, name:'x_N(n) = Σ x(n+rN)'});
+  const allTraces = contribTraces.concat(stemSum);
+  Plotly.newPlot('p3_periodic', allTraces, { title:`时域周期延拓叠加 x_N(n)（N=${N}）——IDFT[X(k)] 的结果`, xaxis:{title:'n', gridcolor:'#eee', dtick:1, range:[-0.5, N-0.5]}, yaxis:{title:'幅值', gridcolor:'#eee'}, height:300, margin:{t:45,b:45,l:55,r:20}, plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff', legend:{orientation:'h', y:1.15} }, {responsive:true, displayModeBar:false});
+
+  const omegas = Array.from({length:L},(_,i)=>2*Math.PI*i/(L-1));
+  const {mags:dtftMag} = computeDTFT(x, 0, omegas);
+  const wAxis = omegas.map(w=>w/Math.PI);
+  const xN = Array(N).fill(0);
+  for (let i=0;i<Math.min(x.length,N);i++) xN[i] = x[i];
+  const X = computeDFT(xN);
+  const XMag = magOf(X);
+  const kW = Array.from({length:N},(_,k)=>2*k/N);
+
+  Plotly.newPlot('p3_dtft_mag', [{ x:wAxis, y:dtftMag, type:'scatter', mode:'lines', name:'|X(e^jω)|', line:{color:'#2a5298',width:2} }], { title:'原序列 DTFT 幅度谱 |X(e^jω)|', xaxis:{title:'ω / π', gridcolor:'#eee'}, yaxis:{title:'|X|', gridcolor:'#eee'}, height:300, margin:{t:45,b:45,l:55,r:20}, plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff' }, {responsive:true, displayModeBar:false});
+
+  const stemSamp = [];
+  XMag.forEach((v,i)=>stemSamp.push({x:[kW[i],kW[i]], y:[0,v], type:'scatter', mode:'lines', line:{color:'#e74c3c',width:2}, showlegend:false, hoverinfo:'skip'}));
+  stemSamp.push({x:kW, y:XMag, type:'scatter', mode:'markers', marker:{color:'#e74c3c',size:8}, name:'|X(k)|'});
+  Plotly.newPlot('p3_dft_samp', stemSamp, { title:`频域 N=${N} 点采样 |X(k)|`, xaxis:{title:'ω/π = 2k/N', gridcolor:'#eee'}, yaxis:{title:'|X(k)|', gridcolor:'#eee'}, height:300, margin:{t:45,b:45,l:55,r:20}, plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff' }, {responsive:true, displayModeBar:false});
+
+  function interpKernel(w) {
+    if (Math.abs(Math.sin(w/2)) < 1e-12) return [1, 0];
+    const mag = Math.sin(w*N/2)/(N*Math.sin(w/2));
+    const ang = -w*(N-1)/2;
+    return [mag*Math.cos(ang), mag*Math.sin(ang)];
+  }
+  const XrecMag = [];
+  for (const w of omegas) {
+    let re=0, im=0;
+    for (let k=0;k<N;k++){ const wk = 2*Math.PI*k/N; let dw = w - wk; const phi = interpKernel(dw); const pr = X[k][0]*phi[0] - X[k][1]*phi[1]; const pi = X[k][0]*phi[1] + X[k][1]*phi[0]; re += pr; im += pi; }
+    XrecMag.push(Math.sqrt(re*re+im*im));
+  }
+  Plotly.newPlot('p3_reconstruct', [
+    {x:wAxis, y:dtftMag, type:'scatter', mode:'lines', name:'原 |X(e^jω)|', line:{color:'#2a5298',width:2}},
+    {x:wAxis, y:XrecMag, type:'scatter', mode:'lines', name:'内插重构 |X_r(e^jω)|', line:{color:'#e67e22',width:2,dash:'dash'}},
+    {x:kW, y:XMag, type:'scatter', mode:'markers', name:'采样点 |X(k)|', marker:{color:'#e74c3c',size:8}}
+  ], { title: N>=M ? `频域内插重构：N=${N} ≥ M=${M}，无混叠，重构与原 DTFT 完全重合` : `频域内插重构：N=${N} &lt; M=${M}，时域混叠，重构 DTFT 与原 DTFT 有偏差`, xaxis:{title:'ω / π', gridcolor:'#eee'}, yaxis:{title:'幅度', gridcolor:'#eee'}, height:380, margin:{t:55,b:50,l:60,r:25}, plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff', legend:{orientation:'h', y:1.12} }, {responsive:true, displayModeBar:false});
+}
+['fs_type','fs_M','fs_N','fs_L'].forEach(id=>{ document.getElementById(id).addEventListener('input', renderFS); });
+
+/* 初始化所有页面 */
+setSeqType('impulse');
+renderCS();
+renderCV();
+renderFS();
+</script>
+</body>
+</html>
