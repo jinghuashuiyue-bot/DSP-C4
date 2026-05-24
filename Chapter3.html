@@ -263,6 +263,7 @@
     <button class="nav-btn active" data-page="page1">DTFT 与 DFT 对比</button>
     <button class="nav-btn" data-page="page2">圆周移位与圆周卷积</button>
     <button class="nav-btn" data-page="page3">频域采样与重构</button>
+    <button class="nav-btn" data-page="page4">语音采样与奈奎斯特验证</button>
   </nav>
 </div>
 
@@ -427,6 +428,60 @@
   </div>
 </section>
 
+<section class="page" id="page4">
+  <div class="page-layout-two">
+    <aside class="sidebar">
+      <div class="panel">
+        <h2>参数调节</h2>
+        <div class="formula">录入语音、采样、看频谱，并验证奈奎斯特采样定理。</div>
+        <div class="controls">
+          <div class="ctrl">
+            <label>采样率 Fs <span class="val" id="au_fs_v">44100</span></label>
+            <input type="range" id="au_fs" min="2000" max="96000" step="1000" value="44100">
+          </div>
+          <div class="ctrl">
+            <label>采样点显示密度 N <span class="val" id="au_n_v">4096</span></label>
+            <input type="range" id="au_n" min="1024" max="8192" step="512" value="4096">
+          </div>
+          <div class="ctrl">
+            <button id="au_start" class="audio-btn" style="width:100%; margin-top:6px;">开始录音</button>
+          </div>
+          <div class="ctrl">
+            <button id="au_stop" class="audio-btn" style="width:100%; margin-top:0;">停止录音</button>
+          </div>
+          <div class="ctrl">
+            <button id="au_save" class="audio-btn" style="width:100%; margin-top:0;">保存原始音频</button>
+          </div>
+          <div class="ctrl">
+            <button id="au_play" class="audio-btn" style="width:100%; margin-top:0;">播放处理后音频</button>
+          </div>
+          <div class="ctrl">
+            <button id="au_resample" class="audio-btn" style="width:100%; margin-top:0;">按采样率重采样并输出</button>
+          </div>
+        </div>
+        <div class="note" id="au_status">未开始录音。点击“开始录音”后将实时显示时域波形和频谱。</div>
+      </div>
+    </aside>
+    <div class="main-content">
+      <div class="panel">
+        <h2>语音采样与频谱分析</h2>
+        <div class="formula">
+          语音信号经过采样后得到离散序列 x[n]，其频谱可由 FFT 近似显示。
+        </div>
+        <div class="plots compact">
+          <div class="plot full" id="au_time"></div>
+          <div class="plot full" id="au_spec"></div>
+          <div class="plot full" id="au_nyquist"></div>
+        </div>
+        <div class="note">
+          <b>奈奎斯特采样定理：</b>若语音中最高频率分量为 f<sub>max</sub>，则采样率必须满足 Fs ≥ 2f<sub>max</sub> 才能避免混叠。
+          本页支持录音存储、按不同采样率重采样并播放输出，用来直观看到采样率变化时频谱与音频内容的变化。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <script>
 /* ======================================================
    工具函数：复数运算 / DTFT / DFT
@@ -488,6 +543,7 @@ function openPage(pageId){
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active', p.id===pageId));
   if (pageId==='page2') { renderCS(); renderCV(); }
   if (pageId==='page3') renderFS();
+  if (pageId==='page4') bindAudioUI();
 }
 
 document.querySelectorAll('.nav-btn').forEach(btn=>{
@@ -928,11 +984,271 @@ function renderFS(){
 }
 ['fs_type','fs_M','fs_N','fs_L'].forEach(id=>{ document.getElementById(id).addEventListener('input', renderFS); });
 
+/* ======================================================
+   第四页：语音采样与奈奎斯特验证
+   ====================================================== */
+let audioCtx = null;
+let analyser = null;
+let mediaStream = null;
+let sourceNode = null;
+let audioFrameId = null;
+let audioRunning = false;
+let recordedChunks = [];
+let recordedBlob = null;
+let recordedUrl = null;
+let recordedAudioBuffer = null;
+let playbackCtx = null;
+
+function renderAudioCharts(timeArr, freqArr, fs) {
+  const N = timeArr.length;
+  const timeX = Array.from({length:N}, (_,i)=> i / fs);
+  const timeY = Array.from(timeArr);
+  const half = freqArr.length / 2;
+  const freqs = Array.from({length:half}, (_,i)=> i * fs / freqArr.length);
+  const mags = Array.from(freqArr.slice(0, half), v=> v);
+  const peakIdx = mags.reduce((best, v, i)=> v > mags[best] ? i : best, 0);
+  const peakFreq = freqs[peakIdx] || 0;
+  const nyq = fs/2;
+  const pass = peakFreq <= nyq;
+
+  Plotly.react('au_time', [{
+    x: timeX,
+    y: timeY,
+    type:'scatter', mode:'lines',
+    line:{color:'#2a5298', width:1.2},
+    name:'语音波形'
+  }], {
+    title:'实时语音时域波形',
+    xaxis:{title:'时间 (s)', gridcolor:'#eee'},
+    yaxis:{title:'幅值', gridcolor:'#eee', range:[-1,1]},
+    height:260, margin:{t:40,b:45,l:55,r:20},
+    plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff'
+  }, {responsive:true, displayModeBar:false});
+
+  Plotly.react('au_spec', [{
+    x: freqs,
+    y: mags,
+    type:'scatter', mode:'lines',
+    line:{color:'#e67e22', width:1.2},
+    name:'幅度谱'
+  }], {
+    title:`实时频谱（主峰约 ${peakFreq.toFixed(0)} Hz）`,
+    xaxis:{title:'频率 (Hz)', gridcolor:'#eee'},
+    yaxis:{title:'幅度', gridcolor:'#eee'},
+    height:260, margin:{t:40,b:45,l:55,r:20},
+    plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff'
+  }, {responsive:true, displayModeBar:false});
+
+  Plotly.react('au_nyquist', [{
+    x:[0, nyq, fs], y:[0, 1, 0],
+    type:'scatter', mode:'lines+markers',
+    line:{color: pass ? '#27ae60' : '#c0392b', width:1.4},
+    marker:{size:6},
+    name:'采样边界'
+  }], {
+    title: pass ? `奈奎斯特条件满足：Fs = ${fs} Hz, Fs/2 = ${nyq} Hz` : `奈奎斯特风险：峰值频率 ${peakFreq.toFixed(0)} Hz 逼近/超过 Fs/2 = ${nyq} Hz`,
+    xaxis:{title:'频率边界 (Hz)', gridcolor:'#eee'},
+    yaxis:{title:'', visible:false},
+    height:180, margin:{t:40,b:40,l:30,r:20},
+    plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff',
+    showlegend:false
+  }, {responsive:true, displayModeBar:false});
+
+  document.getElementById('au_status').textContent = `当前主频约 ${peakFreq.toFixed(0)} Hz，采样率 Fs = ${fs} Hz，奈奎斯特上限为 ${nyq} Hz。`;
+}
+
+function stopAudio() {
+  openPage('page4');
+  audioRunning = false;
+  if (audioFrameId) cancelAnimationFrame(audioFrameId);
+  audioFrameId = null;
+  if (mediaStream) mediaStream.getTracks().forEach(t=>t.stop());
+  mediaStream = null;
+  if (sourceNode) { try { sourceNode.disconnect(); } catch(e) {} sourceNode = null; }
+  if (analyser) { try { analyser.disconnect(); } catch(e) {} analyser = null; }
+  if (window._audioRecorder && window._audioRecorder.state !== 'inactive') {
+    try { window._audioRecorder.stop(); } catch(e) {}
+  }
+  document.getElementById('au_status').textContent = '录音已停止。';
+}
+
+async function startAudio() {
+  try {
+    openPage('page4');
+    stopAudio();
+    recordedChunks = [];
+    recordedBlob = null;
+    recordedAudioBuffer = null;
+    if (recordedUrl) { URL.revokeObjectURL(recordedUrl); recordedUrl = null; }
+    const fs = +document.getElementById('au_fs').value;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: fs });
+    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    sourceNode = audioCtx.createMediaStreamSource(mediaStream);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 2048;
+    analyser.smoothingTimeConstant = 0.8;
+    sourceNode.connect(analyser);
+    const recorder = new MediaRecorder(mediaStream);
+    window._audioRecorder = recorder;
+    recorder.ondataavailable = e => { if (e.data && e.data.size) recordedChunks.push(e.data); };
+    recorder.onstop = async ()=>{
+      if (!recordedChunks.length) return;
+      recordedBlob = new Blob(recordedChunks, { type: recorder.mimeType || 'audio/webm' });
+      recordedUrl = URL.createObjectURL(recordedBlob);
+      try {
+        const ab = await recordedBlob.arrayBuffer();
+        recordedAudioBuffer = await audioCtx.decodeAudioData(ab.slice(0));
+      } catch (e) {}
+      document.getElementById('au_status').textContent = '录音已存储，可保存或按采样率重采样输出。';
+    };
+    recorder.start();
+    audioRunning = true;
+    document.getElementById('au_status').textContent = '正在录音并实时更新波形/频谱...';
+    const timeData = new Float32Array(analyser.fftSize);
+    const freqData = new Float32Array(analyser.frequencyBinCount);
+    const loop = ()=>{
+      if (!audioRunning) return;
+      analyser.getFloatTimeDomainData(timeData);
+      analyser.getFloatFrequencyData(freqData);
+      const linFreq = Array.from(freqData, v=> Math.pow(10, Math.max(v, -120)/20));
+      renderAudioCharts(timeData, linFreq, audioCtx.sampleRate);
+      audioFrameId = requestAnimationFrame(loop);
+    };
+    loop();
+  } catch (err) {
+    document.getElementById('au_status').textContent = '无法开启麦克风，请检查浏览器权限或使用 HTTPS/localhost。';
+  }
+}
+
+function resampleBufferSimple(buffer, targetRate) {
+  const srcRate = buffer.sampleRate;
+  if (srcRate === targetRate) return buffer;
+  const channels = buffer.numberOfChannels;
+  const duration = buffer.duration;
+  const newLength = Math.max(1, Math.round(duration * targetRate));
+  const offline = new OfflineAudioContext(channels, newLength, targetRate);
+  const source = offline.createBufferSource();
+  source.buffer = buffer;
+  source.connect(offline.destination);
+  source.start(0);
+  return offline.startRendering();
+}
+
+function downloadBlob(blob, filename) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0);
+}
+
+async function playProcessedAudio() {
+  if (!recordedAudioBuffer) {
+    document.getElementById('au_status').textContent = '请先录音保存后再播放处理后的音频。';
+    return;
+  }
+  playbackCtx = playbackCtx || new (window.AudioContext || window.webkitAudioContext)();
+  const fs = +document.getElementById('au_fs').value;
+  const targetRate = fs;
+  const processed = await resampleBufferSimple(recordedAudioBuffer, targetRate);
+  const src = playbackCtx.createBufferSource();
+  src.buffer = processed;
+  src.connect(playbackCtx.destination);
+  src.start();
+  document.getElementById('au_status').textContent = `已按 ${targetRate} Hz 播放处理后音频。`;
+}
+
+async function exportResampledAudio() {
+  if (!recordedAudioBuffer) {
+    document.getElementById('au_status').textContent = '请先录音保存后再输出处理后的音频。';
+    return;
+  }
+  const targetRate = +document.getElementById('au_fs').value;
+  const processed = await resampleBufferSimple(recordedAudioBuffer, targetRate);
+  const offline = new OfflineAudioContext(processed.numberOfChannels, processed.length, processed.sampleRate);
+  const src = offline.createBufferSource();
+  src.buffer = processed;
+  src.connect(offline.destination);
+  src.start();
+  const rendered = await offline.startRendering();
+  const wavBlob = await audioBufferToWav(rendered);
+  downloadBlob(wavBlob, `resampled_${targetRate}Hz.wav`);
+  document.getElementById('au_status').textContent = `已输出重采样音频：${targetRate} Hz。`;
+}
+
+async function audioBufferToWav(buffer) {
+  const numOfChan = buffer.numberOfChannels;
+  const length = buffer.length * numOfChan * 2 + 44;
+  const ab = new ArrayBuffer(length);
+  const view = new DataView(ab);
+  const channels = [];
+  let i, sample, offset = 0, pos = 0;
+  const setUint16 = (d, o, v) => d.setUint16(o, v, true);
+  const setUint32 = (d, o, v) => d.setUint32(o, v, true);
+  setUint32(view, 0, 0x46464952);
+  setUint32(view, 4, length - 8);
+  setUint32(view, 8, 0x45564157);
+  setUint32(view, 12, 0x20746d66);
+  setUint32(view, 16, 16);
+  setUint16(view, 20, 1);
+  setUint16(view, 22, numOfChan);
+  setUint32(view, 24, buffer.sampleRate);
+  setUint32(view, 28, buffer.sampleRate * numOfChan * 2);
+  setUint16(view, 32, numOfChan * 2);
+  setUint16(view, 34, 16);
+  setUint32(view, 36, 0x61746164);
+  setUint32(view, 40, length - 44);
+  for (i = 0; i < numOfChan; i++) channels.push(buffer.getChannelData(i));
+  while (pos < buffer.length) {
+    for (i = 0; i < numOfChan; i++) {
+      sample = Math.max(-1, Math.min(1, channels[i][pos]));
+      sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+      view.setInt16(44 + offset, sample, true);
+      offset += 2;
+    }
+    pos++;
+  }
+  return new Blob([ab], { type: 'audio/wav' });
+}
+
+function bindAudioUI() {
+  const startBtn = document.getElementById('au_start');
+  const stopBtn = document.getElementById('au_stop');
+  const saveBtn = document.getElementById('au_save');
+  const playBtn = document.getElementById('au_play');
+  const resampleBtn = document.getElementById('au_resample');
+  if (!startBtn || !stopBtn || !saveBtn || !playBtn || !resampleBtn) return;
+  if (startBtn.dataset.bound === '1') return;
+  const fsEl = document.getElementById('au_fs');
+  const nEl = document.getElementById('au_n');
+  const syncVals = ()=>{
+    document.getElementById('au_fs_v').textContent = fsEl.value;
+    document.getElementById('au_n_v').textContent = nEl.value;
+  };
+  [fsEl,nEl].forEach(el=>el.addEventListener('input', syncVals));
+  syncVals();
+  startBtn.addEventListener('click', startAudio);
+  stopBtn.addEventListener('click', stopAudio);
+  saveBtn.addEventListener('click', ()=>{
+    if (!recordedBlob) {
+      document.getElementById('au_status').textContent = '还没有可保存的录音。';
+      return;
+    }
+    downloadBlob(recordedBlob, 'recorded_audio.webm');
+    document.getElementById('au_status').textContent = '已保存原始录音。';
+  });
+  playBtn.addEventListener('click', playProcessedAudio);
+  resampleBtn.addEventListener('click', exportResampledAudio);
+  startBtn.dataset.bound = '1';
+}
+
 /* 初始化所有页面 */
 setSeqType('impulse');
 renderCS();
 renderCV();
 renderFS();
+bindAudioUI();
 </script>
 </body>
 </html>
