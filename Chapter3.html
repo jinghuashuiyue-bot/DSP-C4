@@ -147,12 +147,56 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 14px;
+    width: 100%;       /* 确保占满主内容区域 */
+    min-width: 0;
   }
   .plots .full { grid-column: 1/-1; }
-  .plot { min-height: 300px; background: #fafbfd; border-radius: 6px; }
+  
+  .plot { 
+  width: 100%;       /* 锁死宽度为父网格的 100% */
+  min-width: 0;      /* 防止内部元素撑开 */
+  min-height: 300px; 
+  background: #fafbfd; 
+  border-radius: 6px; 
+}
+
+#page2 .plot.full {
+  width: 100%;       /* 删掉之前的 900px */
+  margin: 0 auto;
+}
+
   .plots.compact .plot { min-height: 240px; }
   .plots.compact .plot.full { min-height: 280px; }
   .plots.compact .plot.large { min-height: 380px; }
+  .page-layout-two {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+  .page-layout-two .sidebar {
+    position: sticky;
+    top: 72px;
+    align-self: start;
+    width: 100%;
+  }
+  .page-layout-two .sidebar .panel {
+    margin-bottom: 0;
+    padding: 14px;
+    max-height: calc(100vh - 106px);
+    overflow: auto;
+  }
+  .page-layout-two .sidebar h2 { margin-bottom: 10px; font-size: 16px; }
+  .page-layout-two .main-content { min-width: 0; }
+  .page-layout-two .controls {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 10px;
+  }
+  .page-layout-two .plot { min-height: 220px; }
+  .page-layout-two .plots.compact .plot { min-height: 200px; }
+  .page-layout-two .plots.compact .plot.full { min-height: 220px; }
+  .page-layout-two .plots.compact .plot.large { min-height: 280px; }
   .formula {
     background: #f4f7fb;
     border-left: 4px solid #2a5298;
@@ -184,13 +228,13 @@
 
 <header>
   <h1>数字信号处理 · 交互实验平台</h1>
-  <div class="sub">交控2401 · 李家荣 · DTFT / DFT / 圆周卷积 / 频域采样定理</div>
+  <div class="sub">DTFT / DFT / 圆周卷积 / 频域采样定理</div>
 </header>
 
 <nav>
-  <button class="nav-btn active" data-page="page1">一、DTFT 与 DFT 对比</button>
-  <button class="nav-btn" data-page="page2">二、圆周移位与圆周卷积</button>
-  <button class="nav-btn" data-page="page3">三、频域采样与重构</button>
+  <button class="nav-btn active" data-page="page1">DTFT 与 DFT 对比</button>
+  <button class="nav-btn" data-page="page2">圆周移位与圆周卷积</button>
+  <button class="nav-btn" data-page="page3">频域采样与重构</button>
 </nav>
 
 <section class="page active" id="page1">
@@ -199,7 +243,7 @@
       <div class="panel">
         <h2>参数调节</h2>
         <div class="formula">
-          第一页提供 7 种典型序列，参数会随所选序列自动切换。
+          6种典型序列与自定义序列，参数会随所选序列自动切换。
         </div>
         <select class="seq-select" id="seqSelect">
           <option value="impulse">单位冲激 δ(n-n₀)</option>
@@ -238,58 +282,71 @@
 </section>
 
 <section class="page" id="page2">
-  <div class="panel">
-    <h2>圆周移位 Circular Shift</h2>
-    <div class="formula">y(n) = x((n - m))<sub>N</sub> · R<sub>N</sub>(n)，即将 x(n) 以 N 为周期延拓后再取主值</div>
-    <div class="controls">
-      <div class="ctrl">
-        <label>序列 x(n)（逗号分隔）</label>
-        <input type="text" id="cs_seq" value="1,2,3,4,5,6">
+  <div class="page-layout-two">
+    <aside class="sidebar">
+      <div class="panel">
+        <h2>参数调节</h2>
+        <div class="formula">
+          圆周移位参数
+        </div>
+        <div class="controls">
+          <div class="ctrl">
+            <label>序列 x(n)（逗号分隔）</label>
+            <input type="text" id="cs_seq" value="1,2,3,4,5,6">
+          </div>
+          <div class="ctrl">
+            <label>移位点数 m <span class="val" id="cs_m_v">2</span></label>
+            <input type="range" id="cs_m" min="-10" max="10" step="1" value="2">
+          </div>
+          <div class="ctrl">
+            <label>周期 N <span class="val" id="cs_N_v">6</span></label>
+            <input type="range" id="cs_N" min="2" max="16" step="1" value="6">
+          </div>
+          <div class="formula">
+            圆周卷积参数
+          </div>
+          <div class="ctrl">
+            <label>卷积序列 x(n)</label>
+            <input type="text" id="cv_x" value="1,2,3,4">
+          </div>
+          <div class="ctrl">
+            <label>卷积序列 h(n)</label>
+            <input type="text" id="cv_h" value="4,3,2,1">
+          </div>
+          <div class="ctrl">
+            <label>卷积长度 N <span class="val" id="cv_N_v">4</span></label>
+            <input type="range" id="cv_N" min="2" max="16" step="1" value="4">
+          </div>
+        </div>
       </div>
-      <div class="ctrl">
-        <label>移位点数 m <span class="val" id="cs_m_v">2</span></label>
-        <input type="range" id="cs_m" min="-10" max="10" step="1" value="2">
+    </aside>
+    <div class="main-content">
+      <div class="panel">
+        <h2>圆周移位 Circular Shift</h2>
+        <div class="formula">y(n) = x((n - m))<sub>N</sub> · R<sub>N</sub>(n)，即将 x(n) 以 N 为周期延拓后再取主值</div>
+        <div class="plots compact">
+          <div class="plot" id="p2_orig"></div>
+          <div class="plot" id="p2_shifted"></div>
+          <div class="plot full" id="p2_periodic"></div>
+        </div>
       </div>
-      <div class="ctrl">
-        <label>周期 N <span class="val" id="cs_N_v">6</span></label>
-        <input type="range" id="cs_N" min="2" max="16" step="1" value="6">
-      </div>
-    </div>
-    <div class="plots compact">
-      <div class="plot" id="p2_orig"></div>
-      <div class="plot" id="p2_shifted"></div>
-      <div class="plot full" id="p2_periodic"></div>
-    </div>
-  </div>
 
-  <div class="panel">
-    <h2>圆周卷积 Circular Convolution</h2>
-    <div class="formula">
-      y(n) = x(n) Ⓝ h(n) = Σ<sub>m=0</sub><sup>N-1</sup> x(m)·h((n-m))<sub>N</sub>·R<sub>N</sub>(n)
-    </div>
-    <div class="controls">
-      <div class="ctrl">
-        <label>序列 x(n)</label>
-        <input type="text" id="cv_x" value="1,2,3,4">
+      <div class="panel">
+        <h2>圆周卷积 Circular Convolution</h2>
+        <div class="formula">
+          y(n) = x(n) Ⓝ h(n) = Σ<sub>m=0</sub><sup>N-1</sup> x(m)·h((n-m))<sub>N</sub>·R<sub>N</sub>(n)
+        </div>
+        <div class="plots compact">
+          <div class="plot" id="p2_x"></div>
+          <div class="plot" id="p2_h"></div>
+          <div class="plot full" id="p2_conv_2d"></div>
+          <div class="plot full large" id="p2_conv_3d"></div>
+        </div>
+        <div class="note">
+          3D 图展示了 h((n-m))<sub>N</sub> 随 n 的滑动过程：每行对应一个 n 的取值，
+          将该行与 x(m) 逐点相乘求和即得圆周卷积 y(n)。
+        </div>
       </div>
-      <div class="ctrl">
-        <label>序列 h(n)</label>
-        <input type="text" id="cv_h" value="4,3,2,1">
-      </div>
-      <div class="ctrl">
-        <label>卷积长度 N <span class="val" id="cv_N_v">4</span></label>
-        <input type="range" id="cv_N" min="2" max="16" step="1" value="4">
-      </div>
-    </div>
-    <div class="plots compact">
-      <div class="plot" id="p2_x"></div>
-      <div class="plot" id="p2_h"></div>
-      <div class="plot full" id="p2_conv_2d"></div>
-      <div class="plot full large" id="p2_conv_3d"></div>
-    </div>
-    <div class="note">
-      3D 图展示了 h((n-m))<sub>N</sub> 随 n 的滑动过程：每行对应一个 n 的取值，
-      将该行与 x(m) 逐点相乘求和即得圆周卷积 y(n)。
     </div>
   </div>
 </section>
@@ -696,7 +753,7 @@ function stemPlot(elId, ns, vals, title, color) {
   const traces = [];
   vals.forEach((v,i)=>{ traces.push({x:[ns[i],ns[i]], y:[0,v], type:'scatter', mode:'lines', line:{color:color,width:2}, showlegend:false, hoverinfo:'skip'}); });
   traces.push({x:ns, y:vals, type:'scatter', mode:'markers', marker:{color:color,size:9}, showlegend:false});
-  Plotly.newPlot(elId, traces, { title, xaxis:{title:'n', gridcolor:'#eee', dtick:1}, yaxis:{title:'幅值', gridcolor:'#eee'}, height:280, width:600, margin:{t:40,b:45,l:55,r:20}, plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff' }, {responsive:true, displayModeBar:false});
+  Plotly.newPlot(elId, traces, { title, xaxis:{title:'n', gridcolor:'#eee', dtick:1}, yaxis:{title:'幅值', gridcolor:'#eee'}, height:280, margin:{t:40,b:45,l:55,r:20}, plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff' }, {responsive:true, displayModeBar:false});
 }
 function renderCS(){
   const x = parseSeq(document.getElementById('cs_seq').value);
