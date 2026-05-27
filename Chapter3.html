@@ -335,6 +335,7 @@
     <button class="nav-btn" data-page="page4">语音采样与奈奎斯特验证</button>
     <button class="nav-btn" data-page="page5">模拟信号三次失真</button>
     <button class="nav-btn" data-page="page6">线性卷积与圆周卷积关系</button>
+    <button class="nav-btn" data-page="page7">8 点 FFT 算法流程图</button>
   </nav>
 </div>
 
@@ -658,6 +659,48 @@
   </div>
 </section>
 
+<section class="page" id="page7">
+  <div class="page-layout-two">
+    <aside class="sidebar">
+      <div class="panel">
+        <h2>DIT-FFT 参数</h2>
+        <div class="formula">基 2 时间抽取 FFT（Radix-2 Decimation-in-Time FFT），输入端按二进制编号 000～111 排列。</div>
+        <div class="controls">
+          <div class="ctrl">
+            <label>输入序列 x(0)~x(7)</label>
+            <input type="text" id="fft_x" value="1,2,3,4,5,6,7,8">
+          </div>
+          <div class="ctrl">
+            <label>当前级数 <span class="val" id="fft_step_v">0</span></label>
+            <input type="range" id="fft_step" min="0" max="3" step="1" value="0">
+          </div>
+          <div class="ctrl">
+            <button id="fft_play" class="audio-btn" style="width:100%; margin-top:6px;">播放流图动画</button>
+          </div>
+          <div class="ctrl">
+            <button id="fft_stop" class="audio-btn" style="width:100%; margin-top:0;">停止动画</button>
+          </div>
+        </div>
+        <div class="note" id="fft_status">可拖动滑块查看位反转、1 级/2 级/3 级蝶形运算的流图变化。</div>
+      </div>
+    </aside>
+    <div class="main-content">
+      <div class="panel">
+        <h2>8 点基-2 DIT-FFT 流图</h2>
+        <div class="formula">先做位反转输入重排，再依次完成跨度为 2、4、8 的蝶形运算，最终得到 X(0)～X(7)。</div>
+        <div class="plots compact">
+          <div class="plot full" id="fft_flow" style="min-height:460px;"></div>
+          <div class="plot full" id="fft_stage" style="min-height:280px;"></div>
+        </div>
+        <div class="note">
+          <b>说明：</b>当前级数为 0 时显示位反转输入；1～3 时分别高亮第 1、2、3 级蝶形网络。
+          图中的实线表示数据流，虚线表示同一蝶形中的配对关系。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <script>
 /* ======================================================
    工具函数：复数运算 / DTFT / DFT
@@ -721,6 +764,7 @@ function openPage(pageId){
   if (pageId==='page3') renderFS();
   if (pageId==='page4') bindAudioUI();
   if (pageId==='page5') renderDistortion();
+  if (pageId==='page7') { renderFFT(); }
 }
 
 document.querySelectorAll('.nav-btn').forEach(btn=>{
@@ -1410,6 +1454,15 @@ document.getElementById('ds_w2').addEventListener('input', renderDistortion);
 document.getElementById('ds_N').addEventListener('input', renderDistortion);
 document.getElementById('ds_Z').addEventListener('input', renderDistortion);
 
+const fftStepEl = document.getElementById('fft_step');
+const fftInputEl = document.getElementById('fft_x');
+const fftPlayBtn = document.getElementById('fft_play');
+const fftStopBtn = document.getElementById('fft_stop');
+if (fftStepEl) fftStepEl.addEventListener('input', renderFFT);
+if (fftInputEl) fftInputEl.addEventListener('input', renderFFT);
+if (fftPlayBtn) fftPlayBtn.addEventListener('click', startFFTAnimation);
+if (fftStopBtn) fftStopBtn.addEventListener('click', stopFFTAnimation);
+
 /* ======================================================
    第四页：语音采样与奈奎斯特验证
    ====================================================== */
@@ -1669,6 +1722,182 @@ function bindAudioUI() {
   startBtn.dataset.bound = '1';
 }
 
+
+// FFT 可视化相关函数
+function parseFFTInput() {
+  const inputEl = document.getElementById('fft_x');
+  if(!inputEl) return [1,1,1,1,0,0,0,0];
+  let res = inputEl.value.split(/[\,\s]+/).map(Number).filter(v => !isNaN(v));
+  if(res.length === 0) return [1,1,1,1,0,0,0,0];
+  return res;
+}
+
+// 严格的 DIT-FFT 级联数学追踪器
+function fftDITTrace(x, targetStage) {
+  let x8 = new Array(8).fill(0);
+  for(let i=0; i<Math.min(x.length, 8); i++) x8[i] = x[i];
+  const rev = [0, 4, 2, 6, 1, 5, 3, 7];
+  let stagesComplex = [];
+  let curr = new Array(8);
+  for(let i=0; i<8; i++) curr[i] = { re: x8[rev[i]], im: 0 };
+  stagesComplex.push(JSON.parse(JSON.stringify(curr)));
+
+  for (let stage = 1; stage <= 3; stage++) {
+    let nextStage = JSON.parse(JSON.stringify(curr));
+    let le = 1 << stage; let le2 = le >> 1;
+    for (let j = 0; j < le2; j++) {
+      let p = j * (8 / le); let angle = -2 * Math.PI * p / 8;
+      let W = { re: Math.cos(angle), im: Math.sin(angle) };
+      for (let i = j; i < 8; i += le) {
+        let ip = i + le2;
+        let tRe = curr[ip].re * W.re - curr[ip].im * W.im;
+        let tIm = curr[ip].re * W.im + curr[ip].im * W.re;
+        nextStage[i].re = curr[i].re + tRe;
+        nextStage[i].im = curr[i].im + tIm;
+        nextStage[ip].re = curr[i].re - tRe;
+        nextStage[ip].im = curr[i].im - tIm;
+      }
+    }
+    stagesComplex.push(nextStage); curr = nextStage;
+  }
+  return stagesComplex[targetStage].map(c => Math.sqrt(c.re*c.re + c.im*c.im)); 
+}
+
+function renderFFT() {
+  const x = parseFFTInput();
+  const stage = parseInt(document.getElementById('fft_step').value);
+  document.getElementById('fft_step_v').textContent = stage;
+  const inputIndices = [0, 4, 2, 6, 1, 5, 3, 7];
+  const outputIndices = [0, 1, 2, 3, 4, 5, 6, 7];
+  const width = 750; const height = 440; const paddingLeft = 85; const paddingRight = 85;
+  const colWidth = (width - paddingLeft - paddingRight) / 3; const rowHeight = (height - 50) / 7;
+
+  let svg = `<svg width="100%" height="100%" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" style="background:#fff;">`;
+  svg += `<style>.fft-line { stroke: #cbd5e1; stroke-width: 1.5; fill: none; }.fft-line-active { stroke: #3b82f6; stroke-width: 2.5; }.fft-line-highlight { stroke: #ef4444; stroke-width: 2.5; }.fft-node { fill: #475569; }.fft-node-active { fill: #ef4444; }.fft-label { font-size: 13px; font-family: monospace; fill: #1e293b; dominant-baseline: middle; }.w-label { font-size: 11px; fill: #f59e0b; font-weight: bold; text-anchor: middle; }.minus-sign { font-size: 12px; fill: #ef4444; font-weight: bold; }</style>`;
+
+  for (let i = 0; i < 8; i++) {
+    let y = 25 + i * rowHeight; let val = x[inputIndices[i]] !== undefined ? x[inputIndices[i]] : 0;
+    svg += `<text x="${paddingLeft - 65}" y="${y}" class="fft-label">x(${inputIndices[i]})</text><text x="${paddingLeft - 15}" y="${y}" class="fft-label" text-anchor="end" style="fill:#64748b;">${val.toFixed(1)}</text>`;
+  }
+
+  for (let s = 0; s <= 3; s++) {
+    let xPos = paddingLeft + s * colWidth;
+    if (s < 3) {
+      let nextXPos = xPos + colWidth; let groupSize = 1 << (s + 1); let halfGroup = groupSize >> 1;
+      for (let i = 0; i < 8; i++) {
+        let yStart = 25 + i * rowHeight; let isLower = (i % groupSize) >= halfGroup;
+        let pairIndex = isLower ? (i - halfGroup) : (i + halfGroup);
+        let isStageActive = (stage === s + 1);
+        let lineClassStraight = isStageActive ? "fft-line-active" : "fft-line";
+        let lineClassCross = isStageActive ? "fft-line-highlight" : "fft-line";
+        svg += `<line x1="${xPos}" y1="${yStart}" x2="${nextXPos}" y2="${yStart}" class="${lineClassStraight}"/>`;
+        svg += `<line x1="${xPos}" y1="${yStart}" x2="${nextXPos}" y2="${25 + pairIndex * rowHeight}" class="${lineClassCross}"/>`;
+        if (isLower && isStageActive) svg += `<text x="${nextXPos - 15}" y="${yStart - 5}" class="minus-sign">-1</text>`;
+        if (isLower) {
+          let r = (i % groupSize) * (8 / groupSize);
+          if (stage >= s + 1) svg += `<text x="${xPos + colWidth * 0.35}" y="${yStart + (25 + pairIndex * rowHeight - yStart) * 0.35 - 6}" class="w-label">W_8^${r}</text>`;
+        }
+      }
+    }
+    for (let i = 0; i < 8; i++) {
+      let yPos = 25 + i * rowHeight; let isNodeActive = (s === stage);
+      svg += `<circle cx="${xPos}" cy="${yPos}" r="${isNodeActive ? 5 : 3.5}" class="${isNodeActive ? 'fft-node-active' : 'fft-node'}"/>`;
+    }
+  }
+
+  for (let i = 0; i < 8; i++) svg += `<text x="${paddingLeft + 3 * colWidth + 15}" y="${25 + i * rowHeight}" class="fft-label">X(${outputIndices[i]})</text>`;
+  svg += `</svg>`;
+  document.getElementById('fft_flow').innerHTML = svg;
+
+  const stageVals = fftDITTrace(x, stage);
+
+  // 【最简单且最完美的 STEM 实现】利用 null 让普通连线断开，形成垂直火柴杆
+  // 普通折线（lines）的图层层级天生就在圆点（markers）的下方，线绝对不会通到圆点上方！
+  let lineX = [];
+  let lineY = [];
+  for(let i = 0; i < 8; i++) {
+    lineX.push(i, i, null);
+    lineY.push(0, stageVals[i], null);
+  }
+
+  const stemData = [
+    // 1. 火柴杆：纯普通折线图层（由于后画居上原则，它会完美待在圆点下方，绝不穿透）
+    {
+      x: lineX,
+      y: lineY,
+      type: 'scatter',
+      mode: 'lines',
+      line: {
+        color: '#1e3a8a',      // 火柴杆线条颜色（保持深蓝）
+        width: 1.5             // 线条粗细
+      },
+      showlegend: false,
+      hoverinfo: 'skip'        // 鼠标移上去时跳过线，只看点的数据
+    },
+    // 2. 火柴头：纯散点图层（因为后画，圆点百分之百封顶在火柴杆上方）
+    {
+      x: Array.from({length:8}, (_,i)=>i),
+      y: stageVals,
+      type: 'scatter',
+      mode: 'markers',         // 纯散点模式，无多余斜线
+      marker: {
+        color: '#1e3a8a',      // 圆点颜色
+        size: 8,               // 圆点大小
+        symbol: 'circle'
+      },
+      showlegend: false
+    },
+    // 3. Y=0 灰色虚线基轴
+    {
+      x: [-0.5, 7.5],
+      y: [0, 0],
+      type: 'scatter',
+      mode: 'lines',
+      line: { color: '#94a3b8', width: 1, dash: 'dash' },
+      showlegend: false,
+      hoverinfo: 'skip'
+    }
+  ];
+
+  // 2. 仅改变数据源 stemData，其余高度、边距、坐标轴设置完全保留
+  Plotly.react('fft_stage', stemData, {
+    title: `第 ${Math.min(stage,3)} 级级联计算变换输出幅值结果`,
+    xaxis: { title: '频域抽样点索引 (k)', dtick: 1, range: [-0.5, 7.5], gridcolor: '#eee' },
+    yaxis: { title: '幅值强度', gridcolor: '#eee', range: [0, Math.max(...stageVals, 1.0) * 1.25] },
+    height: 260,
+    margin: { t: 45, b: 40, l: 55, r: 25 },
+    paper_bgcolor: '#fff',
+    plot_bgcolor: '#fff',
+    showlegend: false
+  }, { responsive: true, displayModeBar: false });
+
+  const statusTexts = [
+    "当前展示：第 0 级（时域序列输入，经按位反转 Bit-Reversal 正向重排）",
+    "当前展示：第 1 级（跨度为1，完成 4 组 2 点蝶形基运算）",
+    "当前展示：第 2 级（跨度为2，完成 2 组 4 点蝶形基运算）",
+    "当前展示：第 3 级（跨度为4，完成 1 组 8 点标准时间抽取 FFT 变换，正序输出结果）"
+  ];
+  document.getElementById('fft_status').textContent = statusTexts[stage];
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderFFT();
+  const fftXInput = document.getElementById('fft_x'); if(fftXInput) fftXInput.addEventListener('input', renderFFT);
+  const stepSlider = document.getElementById('fft_step'); if(stepSlider) stepSlider.addEventListener('input', renderFFT);
+});
+
+let fftTimer = null;
+function stopFFTAnimation() { if (fftTimer) clearInterval(fftTimer); fftTimer = null; }
+function startFFTAnimation() {
+  stopFFTAnimation();
+  let s = +document.getElementById('fft_step').value;
+  fftTimer = setInterval(()=>{
+    s = (s + 1) % 4;
+    document.getElementById('fft_step').value = s;
+    renderFFT();
+  }, 1400);
+}
+
 /* 初始化所有页面 */
 setSeqType('impulse');
 renderCS();
@@ -1676,7 +1905,9 @@ renderCV();
 renderFS();
 renderDistortion();
 renderLinearConv();
+renderFFT();
 bindAudioUI();
+
 </script>
 </body>
 </html>
