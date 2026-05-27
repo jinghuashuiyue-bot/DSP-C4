@@ -219,9 +219,9 @@
     padding: 10px;
   }
   .page-layout-two .plot { min-height: 220px; }
-  .page-layout-two .plots.compact .plot { min-height: 200px; }
-  .page-layout-two .plots.compact .plot.full { min-height: 220px; }
-  .page-layout-two .plots.compact .plot.large { min-height: 280px; }
+  .page-layout-two .plots.compact .plot { min-height: 180px; }
+  .page-layout-two .plots.compact .plot.full { min-height: 200px; }
+  .page-layout-two .plots.compact .plot.large { min-height: 240px; }
   .formula {
     background: #f4f7fb;
     border-left: 4px solid #2a5298;
@@ -238,6 +238,75 @@
     font-size: 13px;
     color: #664;
     margin: 10px 0;
+  }
+  .conv-array-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 200px;
+    padding: 16px 8px;
+    overflow-x: auto;
+  }
+  table.conv-array {
+    border-collapse: collapse;
+    font-family: "Times New Roman", "Cambria Math", serif;
+    font-size: 20px;
+    color: #1a1a1a;
+  }
+  table.conv-array td {
+    min-width: 2.1em;
+    height: 2.1em;
+    text-align: center;
+    vertical-align: middle;
+    padding: 2px 6px;
+    white-space: nowrap;
+  }
+  table.conv-array tr.hline td {
+    border-top: 2px solid #2c3e50;
+    height: 0;
+    padding: 0;
+    line-height: 0;
+  }
+  table.conv-array tr.sum-row td {
+    font-weight: 600;
+  }
+  table.conv-array tr.operand-row td {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  table.conv-array tr.times-row td:first-child {
+    font-weight: 600;
+    text-align: right;
+    padding-right: 10px;
+  }
+  table.conv-array tr.partial-row td {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  table.conv-array tr.plus-row td {
+    border: none;
+    height: auto;
+    padding: 2px 0 4px;
+    line-height: 1;
+    font-weight: 600;
+    text-align: right;
+    vertical-align: bottom;
+  }
+  table.conv-array tr.plus-row td:first-child {
+    padding-right: 10px;
+  }
+  table.conv-array td.label-cell {
+    text-align: right;
+    padding-right: 12px;
+    white-space: nowrap;
+    font-size: 15px;
+    color: #444;
+    font-weight: 500;
+  }
+  table.conv-array tr.fold-row td {
+    padding-top: 8px;
+    padding-bottom: 8px;
   }
   /* 针对第三页微调图表容器，保证比例协调 */
   #page3 .plot {
@@ -264,6 +333,8 @@
     <button class="nav-btn" data-page="page2">圆周移位与圆周卷积</button>
     <button class="nav-btn" data-page="page3">频域采样与重构</button>
     <button class="nav-btn" data-page="page4">语音采样与奈奎斯特验证</button>
+    <button class="nav-btn" data-page="page5">模拟信号三次失真</button>
+    <button class="nav-btn" data-page="page6">线性卷积与圆周卷积关系</button>
   </nav>
 </div>
 
@@ -337,11 +408,11 @@
           </div>
           <div class="ctrl">
             <label>卷积序列 x(n)</label>
-            <input type="text" id="cv_x" value="1,2,3,4">
+            <input type="text" id="cv_x" value="1,1,1,1">
           </div>
           <div class="ctrl">
             <label>卷积序列 h(n)</label>
-            <input type="text" id="cv_h" value="4,3,2,1">
+            <input type="text" id="cv_h" value="1,1,1">
           </div>
           <div class="ctrl">
             <label>卷积长度 N <span class="val" id="cv_N_v">4</span></label>
@@ -372,6 +443,8 @@
           <div class="plot full" id="p2_conv_2d"></div>
           <div class="plot full large" id="p2_conv_3d"></div>
         </div>
+        <div class="note" style="margin-top:12px;" id="p2_calc_note">计算图：竖式法线性卷积（与 x(n)、h(n) 同步）。</div>
+        <div class="conv-array-wrap" id="p2_circ_calc" style="margin-top:8px;"></div>
         <div class="note">
           3D 图展示了 h((n-m))<sub>N</sub> 随 n 的滑动过程：每行对应一个 n 的取值，
           将该行与 x(m) 逐点相乘求和即得圆周卷积 y(n)。
@@ -482,6 +555,109 @@
   </div>
 </section>
 
+<section class="page" id="page5">
+  <div class="page-layout-two">
+    <aside class="sidebar">
+      <div class="panel">
+        <h2>参数调节</h2>
+        <div class="formula">第一次失真：采样混叠</div>
+        <div class="formula">第二次失真：频谱泄漏</div>
+        <div class="controls">
+          <div class="ctrl">
+            <label>频谱泄漏：ω₁ / π <span class="val" id="ds_w1_v">0.20</span></label>
+            <input type="range" id="ds_w1" min="0.05" max="0.95" step="0.01" value="0.20">
+          </div>
+          <div class="ctrl">
+            <label>频谱泄漏：ω₂ / π <span class="val" id="ds_w2_v">0.23</span></label>
+            <input type="range" id="ds_w2" min="0.05" max="0.98" step="0.01" value="0.23">
+          </div>
+          <div class="formula">第三次失真：栅栏效应</div>
+          <div class="ctrl">
+            <label>R_N(n) 长度 N <span class="val" id="ds_N_v">16</span></label>
+            <input type="range" id="ds_N" min="4" max="128" step="1" value="16">
+          </div>
+          <div class="ctrl">
+            <label>补零长度 Z <span class="val" id="ds_Z_v">128</span></label>
+            <input type="range" id="ds_Z" min="16" max="2048" step="16" value="128">
+          </div>
+        </div>
+      </div>
+    </aside>
+    <div class="main-content">
+      <div class="panel">
+        <h2>第一次失真：A/D 采样引起的频谱混叠</h2>
+        <div class="formula">x_a(t) = e^{-t}u(t)，分别以 2 Hz 和 5 Hz 采样后比较理论 DTFT 与采样 DFT。</div>
+        <div class="plots compact">
+          <div class="plot full" id="ds_alias_time"></div>
+          <div class="plot full" id="ds_alias_2hz"></div>
+          <div class="plot full" id="ds_alias_5hz"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>第二次失真：时域截断引起的频谱泄漏</h2>
+        <div class="formula">x[n] = cos(ω₁n) + cos(ω₂n)，调节 ω₁ 与 ω₂ 观察频谱泄漏导致的无法分辨。</div>
+        <div class="plots compact">
+          <div class="plot full" id="ds_leak_time"></div>
+          <div class="plot full" id="ds_leak_spec"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>第三次失真：DFT 栅栏效应</h2>
+        <div class="formula">以 R_N(n) 为例，使用补零可以提高频谱插值精度，减轻栅栏效应。</div>
+        <div class="plots compact">
+          <div class="plot full" id="ds_fence_nozp"></div>
+          <div class="plot full" id="ds_fence_zp"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="page" id="page6">
+  <div class="page-layout-two">
+    <aside class="sidebar">
+      <div class="panel">
+        <h2>参数调节</h2>
+        <div class="formula">不同参数下，观察线性卷积、圆周卷积与周期延拓的关系。</div>
+        <div class="controls">
+          <div class="ctrl">
+            <label>x(n)</label>
+            <input type="text" id="lc_x" value="1,1,1,1">
+          </div>
+          <div class="ctrl">
+            <label>h(n)</label>
+            <input type="text" id="lc_h" value="1,1,1">
+          </div>
+          <div class="ctrl">
+            <label>圆周长度 N <span class="val" id="lc_N_v">4</span></label>
+            <input type="range" id="lc_N" min="2" max="16" step="1" value="4">
+          </div>
+          <div class="ctrl">
+            <label>周期延拓次数 P <span class="val" id="lc_P_v">2</span></label>
+            <input type="range" id="lc_P" min="1" max="4" step="1" value="2">
+          </div>
+        </div>
+      </div>
+    </aside>
+    <div class="main-content">
+      <div class="panel">
+        <h2>线性卷积 vs 圆周卷积</h2>
+        <div class="formula">先用竖式法画出线性卷积结果，再将结果做向前周期延拓并按 N 点求和，得到圆周卷积。</div>
+        <div class="plots compact">
+          <div class="plot full" id="lc_linear">
+            <div style="text-align:center;font-weight:600;color:#2c3e50;margin:12px 0 4px;">竖式法线性卷积结果</div>
+            <div class="conv-array-wrap" id="lc_linear_table"></div>
+          </div>
+          <div class="plot full" id="lc_circular">
+            <div style="text-align:center;font-weight:600;color:#2c3e50;margin:12px 0 4px;">竖式查加：圆周卷积（左移 N 位与圆周长度 N 对应）</div>
+            <div class="conv-array-wrap" id="lc_circular_table"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <script>
 /* ======================================================
    工具函数：复数运算 / DTFT / DFT
@@ -544,6 +720,7 @@ function openPage(pageId){
   if (pageId==='page2') { renderCS(); renderCV(); }
   if (pageId==='page3') renderFS();
   if (pageId==='page4') bindAudioUI();
+  if (pageId==='page5') renderDistortion();
 }
 
 document.querySelectorAll('.nav-btn').forEach(btn=>{
@@ -879,16 +1056,189 @@ function renderCV(){
   const h = parseSeq(document.getElementById('cv_h').value);
   const N = +document.getElementById('cv_N').value;
   document.getElementById('cv_N_v').textContent = N;
-  const {xN, hN, y, hShiftMat} = circularConv(x, h, N);
+  const {xN, hN, hShiftMat} = circularConv(x, h, N);
+  const yLin = linConv(x.length ? x : [1,1,1,1], h.length ? h : [1,1,1]);
+  const y = circularConvFromLinearFold(yLin, N);
   const ns = Array.from({length:N},(_,i)=>i);
   stemPlot('p2_x', ns, xN, `x(n)，补零至 N=${N}`, '#2a5298');
   stemPlot('p2_h', ns, hN, `h(n)，补零至 N=${N}`, '#27ae60');
-  stemPlot('p2_conv_2d', ns, y, `圆周卷积 y(n) = x(n) ⊛_${N} h(n)`, '#e74c3c');
+  stemPlot('p2_conv_2d', ns, y, `圆周卷积 y(n)（竖式查加，N=${N}）`, '#e74c3c');
   const zMat = [];
   for (let n=0;n<N;n++){ const row = []; for (let m=0;m<N;m++){ row.push(xN[m] * hShiftMat[n][m]); } zMat.push(row); }
   Plotly.newPlot('p2_conv_3d', [{ z: zMat, x: ns, y: ns, type:'surface', colorscale:'Viridis', showscale:true, contours:{z:{show:true, usecolormap:true, highlightcolor:"#fff", project:{z:true}}} }], { title:'3D：x(m)·h((n-m))_N 曲面，沿 m 求和得 y(n)', scene:{ xaxis:{title:'m'}, yaxis:{title:'n'}, zaxis:{title:'x(m)·h((n-m))_N'}, camera:{eye:{x:1.5,y:-1.5,z:1.2}} }, height:380, margin:{t:40,b:10,l:10,r:10}, paper_bgcolor:'#fff' }, {responsive:true, displayModeBar:false});
+
+  const exX = [1,1,1,1];
+  const exH = [1,1,1];
+  const seq = x.length ? x : exX;
+  const ker = h.length ? h : exH;
+  document.getElementById('p2_calc_note').innerHTML =
+    `<div class="conv-array-wrap">${buildLinConvVerticalArrayHTML(seq, ker)}</div>`;
+  const circHost = document.getElementById('p2_circ_calc');
+  if (circHost) circHost.innerHTML = buildCircularConvFoldArrayHTML(seq, ker, N);
 }
 ['cv_x','cv_h','cv_N'].forEach(id=>{ document.getElementById(id).addEventListener('input', renderCV); });
+
+function linConv(x, h) {
+  const y = Array(x.length + h.length - 1).fill(0);
+  for (let n=0; n<y.length; n++) {
+    let sum = 0;
+    for (let m=0; m<x.length; m++) {
+      const k = n - m;
+      if (k >= 0 && k < h.length) sum += x[m] * h[k];
+    }
+    y[n] = sum;
+  }
+  return y;
+}
+
+/**
+ * 竖式法线性卷积（乘法竖式 array，与 x(n)、h(n) 同步）
+ * x 自列 h.length 起排，h 自列 h.length+1 起排；各行部分积为 x[i]·h[j] 错位相乘后求和。
+ */
+function buildLinConvVerticalArrayHTML(x, h) {
+  if (!x.length || !h.length) {
+    return '<div style="color:#888;text-align:center;">请输入有效的 x(n) 与 h(n)</div>';
+  }
+  const y = linConv(x, h);
+  const L = y.length;
+  const resultStart = 1;
+  const xStart = h.length;
+  const hStart = h.length + 1;
+
+  const grid = (W) => Array(W).fill(null);
+  let W = Math.max(
+    resultStart + L,
+    xStart + x.length,
+    hStart + h.length
+  );
+  for (let i = 0; i < x.length; i++) {
+    W = Math.max(W, hStart - i + h.length);
+  }
+  W += 1;
+
+  const rowX = grid(W);
+  x.forEach((v, i) => { rowX[xStart + i] = v; });
+
+  const rowH = grid(W);
+  rowH[0] = '×';
+  h.forEach((v, j) => { rowH[hStart + j] = v; });
+
+  const partials = [];
+  for (let i = 0; i < x.length; i++) {
+    const row = grid(W);
+    for (let j = 0; j < h.length; j++) {
+      const col = hStart - i + j;
+      if (col >= 0 && col < W) row[col] = x[i] * h[j];
+    }
+    partials.push(row);
+  }
+
+  const rowY = grid(W);
+  y.forEach((v, n) => { rowY[resultStart + n] = v; });
+
+  const cell = (v) => (v == null || v === '' ? '' : String(v));
+  const mkRow = (cells, cls = '') => {
+    const tds = cells.map(v => `<td>${cell(v)}</td>`).join('');
+    return `<tr class="${cls}">${tds}</tr>`;
+  };
+  const hline = () => `<tr class="hline"><td colspan="${W}"></td></tr>`;
+
+  let body = mkRow(rowX, 'operand-row');
+  body += mkRow(rowH, 'operand-row times-row');
+  body += hline();
+  partials.forEach((p) => { body += mkRow(p, 'partial-row'); });
+  body += `<tr class="plus-row"><td>+</td><td colspan="${W - 1}"></td></tr>`;
+  body += hline();
+  body += mkRow(rowY, 'sum-row');
+
+  return `<table class="conv-array" aria-label="竖式法线性卷积">
+    <tbody>${body}</tbody>
+  </table>`;
+}
+
+/** 由线性卷积向前周期延拓、按 N 点求和（竖式查加） */
+function circularConvFromLinearFold(yLin, N) {
+  const nCirc = Math.max(2, Math.round(N));
+  const yCirc = Array(nCirc).fill(0);
+  for (let k = 0; k < nCirc; k++) {
+    for (let m = k; m < yLin.length; m += nCirc) yCirc[k] += yLin[m];
+  }
+  return yCirc;
+}
+
+/** 圆周卷积竖式查加：上面/下面为线性卷积，下面相对上面左移 N 位，同列相加得圆周卷积 */
+function buildCircularConvFoldArrayHTML(x, h, N) {
+  if (!x.length || !h.length) {
+    return '<div style="color:#888;text-align:center;">请输入有效的 x(n) 与 h(n)</div>';
+  }
+  const nCirc = Math.max(2, Math.round(N));
+  const yLin = linConv(x, h);
+  const L = yLin.length;
+  const yCirc = circularConvFromLinearFold(yLin, nCirc);
+
+  const bottomStart = 1;
+  const topStart = bottomStart + nCirc;
+  const W = Math.max(topStart + L, bottomStart + L, topStart + nCirc) + 1;
+
+  const grid = (width) => Array(width).fill(null);
+  const rowTop = grid(W);
+  rowTop[0] = '上面序列：';
+  yLin.forEach((v, i) => { rowTop[topStart + i] = v; });
+
+  const rowBottom = grid(W);
+  rowBottom[0] = '下面序列：';
+  yLin.forEach((v, i) => { rowBottom[bottomStart + i] = v; });
+
+  const rowN = grid(W);
+  rowN[0] = '对应位置 n：';
+  for (let k = 0; k < nCirc; k++) rowN[topStart + k] = k;
+
+  const rowResult = grid(W);
+  rowResult[0] = '卷积结果：';
+  for (let k = 0; k < nCirc; k++) rowResult[topStart + k] = yCirc[k];
+
+  const cell = (v) => (v == null || v === '' ? '' : String(v));
+  const mkLabelRow = (cells, cls = '') => {
+    const tds = cells.map((v, i) => {
+      const extra = i === 0 ? 'label-cell' : '';
+      return `<td class="${extra}">${cell(v)}</td>`;
+    }).join('');
+    return `<tr class="${cls}">${tds}</tr>`;
+  };
+  const hline = () => `<tr class="hline"><td colspan="${W}"></td></tr>`;
+
+  let body = mkLabelRow(rowTop, 'fold-row');
+  body += mkLabelRow(rowBottom, 'fold-row');
+  body += hline();
+  body += mkLabelRow(rowN, 'fold-row');
+  body += hline();
+  body += mkLabelRow(rowResult, 'fold-row sum-row');
+
+  return `<table class="conv-array" aria-label="圆周卷积竖式查加 N=${nCirc}">
+    <tbody>${body}</tbody>
+  </table>`;
+}
+
+function renderLinearConv() {
+  const x = parseSeq(document.getElementById('lc_x').value);
+  const h = parseSeq(document.getElementById('lc_h').value);
+  const N = +document.getElementById('lc_N').value;
+  const P = +document.getElementById('lc_P').value;
+  document.getElementById('lc_N_v').textContent = N;
+  document.getElementById('lc_P_v').textContent = P;
+
+  const xForText = parseSeq(document.getElementById('lc_x').value);
+  const hForText = parseSeq(document.getElementById('lc_h').value);
+  const tableHost = document.getElementById('lc_linear_table');
+  if (tableHost) {
+    tableHost.innerHTML = buildLinConvVerticalArrayHTML(xForText, hForText);
+  }
+  const circHost = document.getElementById('lc_circular_table');
+  if (circHost) {
+    circHost.innerHTML = buildCircularConvFoldArrayHTML(xForText, hForText, N);
+  }
+}
+['lc_x','lc_h','lc_N','lc_P'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input', renderLinearConv); });
 
 /* ======================================================
    第三页：频域采样与重构 (修正比例：统一协调高度)
@@ -983,6 +1333,82 @@ function renderFS(){
   ], { title: N>=M ? `频域内插重构：N=${N} ≥ M=${M}，无混叠，重构与原 DTFT 完全重合` : `频域内插重构：N=${N} &lt; M=${M}，时域混叠，重构 DTFT 与原 DTFT 有偏差`, xaxis:{title:'ω / π', gridcolor:'#eee'}, yaxis:{title:'幅度', gridcolor:'#eee'}, height:380, margin:{t:55,b:50,l:60,r:25}, plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff', legend:{orientation:'h', y:1.12} }, {responsive:true, displayModeBar:false});
 }
 ['fs_type','fs_M','fs_N','fs_L'].forEach(id=>{ document.getElementById(id).addEventListener('input', renderFS); });
+
+function dftMagReal(x) {
+  const X = computeDFT(x);
+  return magOf(X);
+}
+function fftShift(arr) {
+  const half = Math.floor(arr.length/2);
+  return arr.slice(half).concat(arr.slice(0,half));
+}
+
+function renderDistortion(){
+  const w1 = +document.getElementById('ds_w1').value * Math.PI;
+  const w2 = +document.getElementById('ds_w2').value * Math.PI;
+  const N = +document.getElementById('ds_N').value;
+  const Z = +document.getElementById('ds_Z').value;
+  document.getElementById('ds_w1_v').textContent = (+document.getElementById('ds_w1').value).toFixed(2);
+  document.getElementById('ds_w2_v').textContent = (+document.getElementById('ds_w2').value).toFixed(2);
+  document.getElementById('ds_N_v').textContent = N;
+  document.getElementById('ds_Z_v').textContent = Z;
+
+  const t = Array.from({length:2000}, (_,i)=> i/200);
+  const xa = t.map(tt => Math.exp(-tt));
+  const x2 = [];
+  const x5 = [];
+  for(let n=0;n<16;n++){
+    const t2 = n/2; const t5 = n/5;
+    x2.push(Math.exp(-t2));
+    x5.push(Math.exp(-t5));
+  }
+  const mag2 = fftShift(dftMagReal(x2.concat(Array(Math.max(0, 128-x2.length)).fill(0))));
+  const mag5 = fftShift(dftMagReal(x5.concat(Array(Math.max(0, 128-x5.length)).fill(0))));
+  const wGrid = Array.from({length:512},(_,i)=> -Math.PI + 2*Math.PI*i/511);
+  const dtft2 = wGrid.map(w => {
+    let re=0, im=0;
+    for (let n=0;n<x2.length;n++){ const c=Math.cos(-w*n), s=Math.sin(-w*n); re += x2[n]*c; im += x2[n]*s; }
+    return Math.sqrt(re*re+im*im);
+  });
+  const dtft5 = wGrid.map(w => {
+    let re=0, im=0;
+    for (let n=0;n<x5.length;n++){ const c=Math.cos(-w*n), s=Math.sin(-w*n); re += x5[n]*c; im += x5[n]*s; }
+    return Math.sqrt(re*re+im*im);
+  });
+  const xk2 = Array.from({length:mag2.length},(_,i)=> (i - mag2.length/2) * 2*Math.PI/128);
+  const xk5 = Array.from({length:mag5.length},(_,i)=> (i - mag5.length/2) * 2*Math.PI/128);
+  Plotly.react('ds_alias_time', [
+    {x:t, y:xa, type:'scatter', mode:'lines', name:'x_a(t)=e^{-t}u(t)', line:{color:'#2a5298', width:1.2}},
+    {x:Array.from({length:x2.length},(_,i)=>i/2), y:x2, type:'scatter', mode:'markers', name:'2Hz 采样', marker:{color:'#e67e22', size:6, symbol:'circle'}},
+    {x:Array.from({length:x5.length},(_,i)=>i/5), y:x5, type:'scatter', mode:'markers', name:'5Hz 采样', marker:{color:'#27ae60', size:6, symbol:'square'}}
+  ], {title:'采样前后时域对比', xaxis:{title:'t (s)', gridcolor:'#eee'}, yaxis:{title:'幅值', gridcolor:'#eee'}, height:240, margin:{t:40,b:45,l:55,r:20}, plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff', legend:{orientation:'h', y:1.12}}, {responsive:true, displayModeBar:false});
+  Plotly.react('ds_alias_2hz', [
+    {x:xk2, y:mag2, type:'scatter', mode:'lines', line:{color:'#e67e22', width:1.0}, name:'DFT 幅度'},
+    {x:wGrid, y:dtft2, type:'scatter', mode:'lines', line:{color:'#2a5298', width:1.2, dash:'dash'}, name:'DTFT 幅度'}
+  ], {title:'2Hz 采样：DFT 与 DTFT 对比', xaxis:{title:'ω (rad)', gridcolor:'#eee'}, yaxis:{title:'|X|', gridcolor:'#eee'}, height:240, margin:{t:40,b:45,l:55,r:20}, plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff', legend:{orientation:'h', y:1.12}}, {responsive:true, displayModeBar:false});
+  Plotly.react('ds_alias_5hz', [
+    {x:xk5, y:mag5, type:'scatter', mode:'lines', line:{color:'#27ae60', width:1.0}, name:'DFT 幅度'},
+    {x:wGrid, y:dtft5, type:'scatter', mode:'lines', line:{color:'#2a5298', width:1.2, dash:'dash'}, name:'DTFT 幅度'}
+  ], {title:'5Hz 采样：DFT 与 DTFT 对比', xaxis:{title:'ω (rad)', gridcolor:'#eee'}, yaxis:{title:'|X|', gridcolor:'#eee'}, height:240, margin:{t:40,b:45,l:55,r:20}, plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff', legend:{orientation:'h', y:1.12}}, {responsive:true, displayModeBar:false});
+
+  const n = Array.from({length:N}, (_,i)=>i);
+  const xn = n.map(i => Math.cos(w1*i) + Math.cos(w2*i));
+  Plotly.react('ds_leak_time', [{x:n, y:xn, type:'scatter', mode:'lines+markers', line:{color:'#2a5298', width:1.2}, marker:{size:5}}], {title:'截断后的时域序列 x[n]', xaxis:{title:'n', gridcolor:'#eee', dtick:1}, yaxis:{title:'幅值', gridcolor:'#eee'}, height:240, margin:{t:40,b:45,l:55,r:20}, plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff'}, {responsive:true, displayModeBar:false});
+  const Xleak = fftShift(dftMagReal(xn));
+  Plotly.react('ds_leak_spec', [{x:Array.from({length:Xleak.length},(_,i)=>i-Xleak.length/2), y:Xleak, type:'scatter', mode:'lines', line:{color:'#c0392b', width:1.2}}], {title:'频谱泄漏导致的谱线无法分辨', xaxis:{title:'频率索引', gridcolor:'#eee'}, yaxis:{title:'|X|', gridcolor:'#eee'}, height:260, margin:{t:40,b:45,l:55,r:20}, plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff'}, {responsive:true, displayModeBar:false});
+
+  const rect = Array.from({length:N}, ()=>1);
+  const rectZp = rect.concat(Array(Math.max(0, Z-N)).fill(0));
+  const Xrect = fftShift(dftMagReal(rect));
+  const XrectZp = fftShift(dftMagReal(rectZp));
+  Plotly.react('ds_fence_nozp', [{x:Array.from({length:Xrect.length},(_,i)=>i-Xrect.length/2), y:Xrect, type:'scatter', mode:'lines', line:{color:'#8e44ad', width:1.2}}], {title:'R_N(n) 的 N 点 DFT：栅栏效应明显', xaxis:{title:'频率索引', gridcolor:'#eee'}, yaxis:{title:'|X|', gridcolor:'#eee'}, height:240, margin:{t:40,b:45,l:55,r:20}, plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff'}, {responsive:true, displayModeBar:false});
+  Plotly.react('ds_fence_zp', [{x:Array.from({length:XrectZp.length},(_,i)=>i-XrectZp.length/2), y:XrectZp, type:'scatter', mode:'lines', line:{color:'#16a085', width:1.2}}], {title:`R_N(n) 补零到 ${Z} 点：减轻栅栏效应`, xaxis:{title:'频率索引', gridcolor:'#eee'}, yaxis:{title:'|X|', gridcolor:'#eee'}, height:240, margin:{t:40,b:45,l:55,r:20}, plot_bgcolor:'#fafbfd', paper_bgcolor:'#fff'}, {responsive:true, displayModeBar:false});
+}
+
+document.getElementById('ds_w1').addEventListener('input', renderDistortion);
+document.getElementById('ds_w2').addEventListener('input', renderDistortion);
+document.getElementById('ds_N').addEventListener('input', renderDistortion);
+document.getElementById('ds_Z').addEventListener('input', renderDistortion);
 
 /* ======================================================
    第四页：语音采样与奈奎斯特验证
@@ -1248,6 +1674,8 @@ setSeqType('impulse');
 renderCS();
 renderCV();
 renderFS();
+renderDistortion();
+renderLinearConv();
 bindAudioUI();
 </script>
 </body>
