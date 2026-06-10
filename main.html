@@ -705,8 +705,7 @@
           <div class="plot full" id="fft_stage" style="min-height:280px;"></div>
         </div>
         <div class="note">
-          <b>说明：</b>当前级数为 0 时显示位反转输入；1～3 时分别高亮第 1、2、3 级蝶形网络。
-          图中的实线表示数据流，虚线表示同一蝶形中的配对关系。
+          <b>说明：</b>彩色圆点从 8 个输入值出发；每到一个蝶形节点先<strong>分裂</strong>为两个，分别沿实线与交叉线流动，再在下一节点与配对支路上的圆点<strong>汇合</strong>。点击“播放流图动画”观看。
         </div>
       </div>
     </div>
@@ -1609,8 +1608,13 @@ const fftStepEl = document.getElementById('fft_step');
 const fftInputEl = document.getElementById('fft_x');
 const fftPlayBtn = document.getElementById('fft_play');
 const fftStopBtn = document.getElementById('fft_stop');
-if (fftStepEl) fftStepEl.addEventListener('input', renderFFT);
-if (fftInputEl) fftInputEl.addEventListener('input', renderFFT);
+if (fftStepEl) fftStepEl.addEventListener('input', () => {
+  if (!fftAnimRaf) {
+    fftAnimPhase = stageToFlowPhase(+fftStepEl.value);
+    renderFFT();
+  }
+});
+if (fftInputEl) fftInputEl.addEventListener('input', () => { stopFFTAnimation(); renderFFT(); });
 if (fftPlayBtn) fftPlayBtn.addEventListener('click', startFFTAnimation);
 if (fftStopBtn) fftStopBtn.addEventListener('click', stopFFTAnimation);
 
@@ -1875,12 +1879,153 @@ function bindAudioUI() {
 
 
 // FFT 可视化相关函数
+const FFT_DOT_COLORS = ['#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#3b82f6','#8b5cf6','#ec4899'];
+const FFT_INPUT_IDX = [0, 4, 2, 6, 1, 5, 3, 7];
+let fftAnimRaf = null;
+let fftAnimPhase = 0;
+
 function parseFFTInput() {
   const inputEl = document.getElementById('fft_x');
   if(!inputEl) return [1,1,1,1,0,0,0,0];
   let res = inputEl.value.split(/[\,\s]+/).map(Number).filter(v => !isNaN(v));
   if(res.length === 0) return [1,1,1,1,0,0,0,0];
   return res;
+}
+
+function getFFTGeom() {
+  const width = 750, height = 440, paddingLeft = 85, paddingRight = 85;
+  const colWidth = (width - paddingLeft - paddingRight) / 3;
+  const rowHeight = (height - 50) / 7;
+  return {
+    width, height, paddingLeft, paddingRight, colWidth, rowHeight,
+    inputX: paddingLeft - 42,
+    nodeX(col) { return paddingLeft + col * colWidth; },
+    nodeY(row) { return 25 + row * rowHeight; }
+  };
+}
+
+function fftEase(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+
+function getFFTPairIndex(row, seg) {
+  const groupSize = 1 << (seg + 1);
+  const halfGroup = groupSize >> 1;
+  return (row % groupSize) >= halfGroup ? row - halfGroup : row + halfGroup;
+}
+
+function fftRowColor(row) {
+  return FFT_DOT_COLORS[FFT_INPUT_IDX[row] % 8];
+}
+
+function computeFFTFlowDots(phase, geom) {
+  const dots = [];
+  const spawnEnd = 0.07;
+
+  if (phase <= spawnEnd) {
+    const t = fftEase(phase / spawnEnd);
+    for (let r = 0; r < 8; r++) {
+      const y = geom.nodeY(r);
+      dots.push({
+        x: geom.inputX + (geom.nodeX(0) - geom.inputX) * t,
+        y,
+        r: 6,
+        color: fftRowColor(r),
+        opacity: 0.35 + 0.65 * t
+      });
+    }
+    return dots;
+  }
+
+  const travel = (phase - spawnEnd) / (1 - spawnEnd);
+  const nSeg = 4;
+  const segF = Math.min(travel * nSeg, nSeg - 1e-6);
+  const seg = Math.floor(segF);
+  const segT = segF - seg;
+
+  if (seg >= 3) {
+    const x0 = geom.nodeX(3);
+    const x1 = geom.nodeX(3) + geom.colWidth * 0.22;
+    const et = fftEase(segT);
+    for (let r = 0; r < 8; r++) {
+      dots.push({
+        x: x0 + (x1 - x0) * et,
+        y: geom.nodeY(r),
+        r: 6,
+        color: fftRowColor(r),
+        opacity: 1
+      });
+    }
+    return dots;
+  }
+
+  const x0 = geom.nodeX(seg);
+  const x1 = geom.nodeX(seg + 1);
+  const splitEnd = 0.12;
+  const travelEnd = 0.82;
+
+  if (segT < splitEnd) {
+    const sp = segT / splitEnd;
+    for (let r = 0; r < 8; r++) {
+      const y = geom.nodeY(r);
+      const color = fftRowColor(r);
+      if (sp < 0.35) {
+        dots.push({ x: x0, y, r: 6, color, opacity: 1 });
+      } else {
+        const p = fftEase((sp - 0.35) / 0.65);
+        const sep = 7 * p;
+        dots.push({ x: x0, y: y - sep * 0.35, r: 4.5, color, opacity: 1 });
+        dots.push({ x: x0, y: y + sep * 0.35, r: 4.5, color, opacity: 1 });
+      }
+    }
+    return dots;
+  }
+
+  if (segT < travelEnd) {
+    const t = fftEase((segT - splitEnd) / (travelEnd - splitEnd));
+    for (let r = 0; r < 8; r++) {
+      const y0 = geom.nodeY(r);
+      const pair = getFFTPairIndex(r, seg);
+      const yPair = geom.nodeY(pair);
+      const color = fftRowColor(r);
+      dots.push({
+        x: x0 + (x1 - x0) * t,
+        y: y0,
+        r: 4.5,
+        color,
+        opacity: 0.95
+      });
+      dots.push({
+        x: x0 + (x1 - x0) * t,
+        y: y0 + (yPair - y0) * t,
+        r: 4.5,
+        color,
+        opacity: 0.95
+      });
+    }
+    return dots;
+  }
+
+  const mergeProg = (segT - travelEnd) / (1 - travelEnd);
+  for (let r = 0; r < 8; r++) {
+    const y = geom.nodeY(r);
+    const pair = getFFTPairIndex(r, seg);
+    const colorR = fftRowColor(r);
+    const colorP = fftRowColor(pair);
+    if (mergeProg < 0.88) {
+      const mp = fftEase(mergeProg / 0.88);
+      const sep = 13 * (1 - mp);
+      dots.push({ x: x1 - sep, y, r: 4.5, color: colorR, opacity: 1 });
+      dots.push({ x: x1 + sep, y, r: 4.5, color: colorP, opacity: 1 });
+    } else {
+      dots.push({ x: x1, y, r: 5.5, color: colorR, opacity: 1 });
+    }
+  }
+  return dots;
+}
+
+function flowPhaseToStage(phase) {
+  if (phase < 0.07) return 0;
+  const travel = (phase - 0.07) / 0.93;
+  return Math.min(3, Math.floor(travel * 4));
 }
 
 // 严格的 DIT-FFT 级联数学追踪器
@@ -1914,103 +2059,103 @@ function fftDITTrace(x, targetStage) {
   return stagesComplex[targetStage].map(c => Math.sqrt(c.re*c.re + c.im*c.im)); 
 }
 
-function renderFFT() {
-  const x = parseFFTInput();
-  const stage = parseInt(document.getElementById('fft_step').value);
-  document.getElementById('fft_step_v').textContent = stage;
-  const inputIndices = [0, 4, 2, 6, 1, 5, 3, 7];
+function renderFFTFlowChart(x, stage, flowPhase) {
+  const geom = getFFTGeom();
+  const { width, height, paddingLeft, colWidth, rowHeight } = geom;
   const outputIndices = [0, 1, 2, 3, 4, 5, 6, 7];
-  const width = 750; const height = 440; const paddingLeft = 85; const paddingRight = 85;
-  const colWidth = (width - paddingLeft - paddingRight) / 3; const rowHeight = (height - 50) / 7;
 
   let svg = `<svg width="100%" height="100%" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" style="background:#fff;">`;
-  svg += `<style>.fft-line { stroke: #cbd5e1; stroke-width: 1.5; fill: none; }.fft-line-active { stroke: #3b82f6; stroke-width: 2.5; }.fft-line-highlight { stroke: #ef4444; stroke-width: 2.5; }.fft-node { fill: #475569; }.fft-node-active { fill: #ef4444; }.fft-label { font-size: 13px; font-family: monospace; fill: #1e293b; dominant-baseline: middle; }.w-label { font-size: 11px; fill: #f59e0b; font-weight: bold; text-anchor: middle; }.minus-sign { font-size: 12px; fill: #ef4444; font-weight: bold; }</style>`;
+  svg += `<style>
+    .fft-line { stroke: #cbd5e1; stroke-width: 1.5; fill: none; }
+    .fft-node { fill: #475569; }
+    .fft-label { font-size: 13px; font-family: monospace; fill: #1e293b; dominant-baseline: middle; }
+    .w-label { font-size: 11px; fill: #f59e0b; font-weight: bold; text-anchor: middle; }
+    .minus-sign { font-size: 12px; fill: #ef4444; font-weight: bold; }
+    .fft-flow-dot { stroke: #fff; stroke-width: 1.5; filter: drop-shadow(0 0 4px rgba(59,130,246,0.55)); }
+    .fft-input-dot { fill: #94a3b8; opacity: 0.45; }
+  </style>`;
 
   for (let i = 0; i < 8; i++) {
-    let y = 25 + i * rowHeight; let val = x[inputIndices[i]] !== undefined ? x[inputIndices[i]] : 0;
-    svg += `<text x="${paddingLeft - 65}" y="${y}" class="fft-label">x(${inputIndices[i]})</text><text x="${paddingLeft - 15}" y="${y}" class="fft-label" text-anchor="end" style="fill:#64748b;">${val.toFixed(1)}</text>`;
+    const y = geom.nodeY(i);
+    const srcIdx = FFT_INPUT_IDX[i];
+    const val = x[srcIdx] !== undefined ? x[srcIdx] : 0;
+    svg += `<text x="${paddingLeft - 65}" y="${y}" class="fft-label">x(${srcIdx})</text>`;
+    svg += `<text x="${paddingLeft - 15}" y="${y}" class="fft-label" text-anchor="end" style="fill:#64748b;">${val.toFixed(1)}</text>`;
+    svg += `<circle cx="${geom.inputX}" cy="${y}" r="4" class="fft-input-dot"/>`;
   }
 
   for (let s = 0; s <= 3; s++) {
-    let xPos = paddingLeft + s * colWidth;
+    const xPos = geom.nodeX(s);
     if (s < 3) {
-      let nextXPos = xPos + colWidth; let groupSize = 1 << (s + 1); let halfGroup = groupSize >> 1;
+      const nextXPos = geom.nodeX(s + 1);
+      const groupSize = 1 << (s + 1);
+      const halfGroup = groupSize >> 1;
       for (let i = 0; i < 8; i++) {
-        let yStart = 25 + i * rowHeight; let isLower = (i % groupSize) >= halfGroup;
-        let pairIndex = isLower ? (i - halfGroup) : (i + halfGroup);
-        let isStageActive = (stage === s + 1);
-        let lineClassStraight = isStageActive ? "fft-line-active" : "fft-line";
-        let lineClassCross = isStageActive ? "fft-line-highlight" : "fft-line";
-        svg += `<line x1="${xPos}" y1="${yStart}" x2="${nextXPos}" y2="${yStart}" class="${lineClassStraight}"/>`;
-        svg += `<line x1="${xPos}" y1="${yStart}" x2="${nextXPos}" y2="${25 + pairIndex * rowHeight}" class="${lineClassCross}"/>`;
-        if (isLower && isStageActive) svg += `<text x="${nextXPos - 15}" y="${yStart - 5}" class="minus-sign">-1</text>`;
+        const yStart = geom.nodeY(i);
+        const isLower = (i % groupSize) >= halfGroup;
+        const pairIndex = isLower ? (i - halfGroup) : (i + halfGroup);
+        svg += `<line x1="${xPos}" y1="${yStart}" x2="${nextXPos}" y2="${yStart}" class="fft-line"/>`;
+        svg += `<line x1="${xPos}" y1="${yStart}" x2="${nextXPos}" y2="${geom.nodeY(pairIndex)}" class="fft-line"/>`;
+        if (isLower && stage >= s + 1) svg += `<text x="${nextXPos - 15}" y="${yStart - 5}" class="minus-sign">-1</text>`;
         if (isLower) {
-          let r = (i % groupSize) * (8 / groupSize);
-          if (stage >= s + 1) svg += `<text x="${xPos + colWidth * 0.35}" y="${yStart + (25 + pairIndex * rowHeight - yStart) * 0.35 - 6}" class="w-label">W_8^${r}</text>`;
+          const r = (i % groupSize) * (8 / groupSize);
+          if (stage >= s + 1) svg += `<text x="${xPos + colWidth * 0.35}" y="${yStart + (geom.nodeY(pairIndex) - yStart) * 0.35 - 6}" class="w-label">W_8^${r}</text>`;
         }
       }
     }
     for (let i = 0; i < 8; i++) {
-      let yPos = 25 + i * rowHeight; let isNodeActive = (s === stage);
-      svg += `<circle cx="${xPos}" cy="${yPos}" r="${isNodeActive ? 5 : 3.5}" class="${isNodeActive ? 'fft-node-active' : 'fft-node'}"/>`;
+      const yPos = geom.nodeY(i);
+      svg += `<circle cx="${xPos}" cy="${yPos}" r="3.5" class="fft-node"/>`;
     }
   }
 
-  for (let i = 0; i < 8; i++) svg += `<text x="${paddingLeft + 3 * colWidth + 15}" y="${25 + i * rowHeight}" class="fft-label">X(${outputIndices[i]})</text>`;
+  for (const dot of computeFFTFlowDots(flowPhase, geom)) {
+    svg += `<circle cx="${dot.x}" cy="${dot.y}" r="${dot.r}" class="fft-flow-dot" fill="${dot.color}" opacity="${dot.opacity}"/>`;
+  }
+
+  for (let i = 0; i < 8; i++) {
+    svg += `<text x="${geom.nodeX(3) + 15}" y="${geom.nodeY(i)}" class="fft-label">X(${outputIndices[i]})</text>`;
+  }
   svg += `</svg>`;
-  document.getElementById('fft_flow').innerHTML = svg;
+  return svg;
+}
+
+function renderFFT() {
+  const x = parseFFTInput();
+  const manualStage = parseInt(document.getElementById('fft_step').value, 10);
+  const stage = fftAnimRaf !== null ? flowPhaseToStage(fftAnimPhase) : manualStage;
+  if (fftAnimRaf === null) fftAnimPhase = stageToFlowPhase(manualStage);
+
+  document.getElementById('fft_step_v').textContent = stage;
+  document.getElementById('fft_flow').innerHTML = renderFFTFlowChart(x, stage, fftAnimPhase);
 
   const stageVals = fftDITTrace(x, stage);
 
-  // 【最简单且最完美的 STEM 实现】利用 null 让普通连线断开，形成垂直火柴杆
-  // 普通折线（lines）的图层层级天生就在圆点（markers）的下方，线绝对不会通到圆点上方！
-  let lineX = [];
-  let lineY = [];
+  let lineX = [], lineY = [];
   for(let i = 0; i < 8; i++) {
     lineX.push(i, i, null);
     lineY.push(0, stageVals[i], null);
   }
 
   const stemData = [
-    // 1. 火柴杆：纯普通折线图层（由于后画居上原则，它会完美待在圆点下方，绝不穿透）
     {
-      x: lineX,
-      y: lineY,
-      type: 'scatter',
-      mode: 'lines',
-      line: {
-        color: '#1e3a8a',      // 火柴杆线条颜色（保持深蓝）
-        width: 1.5             // 线条粗细
-      },
-      showlegend: false,
-      hoverinfo: 'skip'        // 鼠标移上去时跳过线，只看点的数据
+      x: lineX, y: lineY, type: 'scatter', mode: 'lines',
+      line: { color: '#1e3a8a', width: 1.5 },
+      showlegend: false, hoverinfo: 'skip'
     },
-    // 2. 火柴头：纯散点图层（因为后画，圆点百分之百封顶在火柴杆上方）
     {
-      x: Array.from({length:8}, (_,i)=>i),
-      y: stageVals,
-      type: 'scatter',
-      mode: 'markers',         // 纯散点模式，无多余斜线
-      marker: {
-        color: '#1e3a8a',      // 圆点颜色
-        size: 8,               // 圆点大小
-        symbol: 'circle'
-      },
+      x: Array.from({length:8}, (_,i)=>i), y: stageVals,
+      type: 'scatter', mode: 'markers',
+      marker: { color: '#1e3a8a', size: 8, symbol: 'circle' },
       showlegend: false
     },
-    // 3. Y=0 灰色虚线基轴
     {
-      x: [-0.5, 7.5],
-      y: [0, 0],
-      type: 'scatter',
-      mode: 'lines',
+      x: [-0.5, 7.5], y: [0, 0], type: 'scatter', mode: 'lines',
       line: { color: '#94a3b8', width: 1, dash: 'dash' },
-      showlegend: false,
-      hoverinfo: 'skip'
+      showlegend: false, hoverinfo: 'skip'
     }
   ];
 
-  // 2. 仅改变数据源 stemData，其余高度、边距、坐标轴设置完全保留
   Plotly.react('fft_stage', stemData, {
     title: `第 ${Math.min(stage,3)} 级级联计算变换输出幅值结果`,
     xaxis: { title: '频域抽样点索引 (k)', dtick: 1, range: [-0.5, 7.5], gridcolor: '#eee' },
@@ -2028,14 +2173,13 @@ function renderFFT() {
     "当前展示：第 2 级（跨度为2，完成 2 组 4 点蝶形基运算）",
     "当前展示：第 3 级（跨度为4，完成 1 组 8 点标准时间抽取 FFT 变换，正序输出结果）"
   ];
-  document.getElementById('fft_status').textContent = statusTexts[stage];
+  const animHint = fftAnimRaf !== null ? ' · 圆点正在分裂、流动与汇合' : ' · 点击“播放流图动画”可观看分裂与汇合过程';
+  document.getElementById('fft_status').textContent = statusTexts[stage] + animHint;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  renderFFT();
-  const fftXInput = document.getElementById('fft_x'); if(fftXInput) fftXInput.addEventListener('input', renderFFT);
-  const stepSlider = document.getElementById('fft_step'); if(stepSlider) stepSlider.addEventListener('input', renderFFT);
-});
+function stageToFlowPhase(stage) {
+  return 0.07 + (Math.min(stage, 3) / 4) * 0.93 + 0.01;
+}
 
 function iirButterworthMag(w, wc, n) {
   return 1 / Math.sqrt(1 + Math.pow(w / wc, 2 * n));
@@ -2198,16 +2342,25 @@ function renderFIRPage() {
 ['fir_N','fir_window_select'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input', renderFIRPage); });
 const firRefreshBtn = document.getElementById('fir_refresh'); if (firRefreshBtn) firRefreshBtn.addEventListener('click', renderFIRPage);
 
-let fftTimer = null;
-function stopFFTAnimation() { if (fftTimer) clearInterval(fftTimer); fftTimer = null; }
+function stopFFTAnimation() {
+  if (fftAnimRaf) cancelAnimationFrame(fftAnimRaf);
+  fftAnimRaf = null;
+}
 function startFFTAnimation() {
   stopFFTAnimation();
-  let s = +document.getElementById('fft_step').value;
-  fftTimer = setInterval(()=>{
-    s = (s + 1) % 4;
-    document.getElementById('fft_step').value = s;
+  fftAnimPhase = 0;
+  const duration = 9000;
+  const t0 = performance.now();
+  function tick(now) {
+    const elapsed = now - t0;
+    fftAnimPhase = (elapsed % duration) / duration;
+    const stage = flowPhaseToStage(fftAnimPhase);
+    const stepEl = document.getElementById('fft_step');
+    if (stepEl && +stepEl.value !== stage) stepEl.value = stage;
     renderFFT();
-  }, 1400);
+    fftAnimRaf = requestAnimationFrame(tick);
+  }
+  fftAnimRaf = requestAnimationFrame(tick);
 }
 
 /* 初始化所有页面 */
