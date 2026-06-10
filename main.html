@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <title>数字信号处理 交互式实验</title>
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$','$'], ['\\(','\\)']],
+      displayMath: [['$$','$$'], ['\\[','\\]']]
+    },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -336,6 +346,8 @@
     <button class="nav-btn" data-page="page5">模拟信号三次失真</button>
     <button class="nav-btn" data-page="page6">线性卷积与圆周卷积关系</button>
     <button class="nav-btn" data-page="page7">8 点 FFT 算法流程图</button>
+    <button class="nav-btn" data-page="page8">IIR 数字滤波器设计</button>
+    <button class="nav-btn" data-page="page9">FIR 数字滤波器设计</button>
   </nav>
 </div>
 
@@ -701,6 +713,144 @@
   </div>
 </section>
 
+<section class="page" id="page8">
+  <div class="page-layout-two">
+    <aside class="sidebar">
+      <div class="panel">
+        <h2>IIR 数字滤波器设计</h2>
+        <div class="formula">IIR 滤波器特点：递归结构、阶数较低、频率选择性强，但对系数量化更敏感。</div>
+        <div class="controls">
+          <div class="ctrl">
+            <label>技术指标类型</label>
+            <select id="iir_target">
+              <option value="lowpass">低通原型</option>
+              <option value="highpass">高通原型</option>
+              <option value="bandpass">带通原型</option>
+              <option value="bandstop">带阻原型</option>
+            </select>
+          </div>
+          <div class="ctrl">
+            <label>通带边缘 ωp / π <span class="val" id="iir_wp_v">0.30</span></label>
+            <input type="range" id="iir_wp" min="0.05" max="0.80" step="0.01" value="0.30">
+          </div>
+          <div class="ctrl">
+            <label>阻带边缘 ωs / π <span class="val" id="iir_ws_v">0.45</span></label>
+            <input type="range" id="iir_ws" min="0.08" max="0.95" step="0.01" value="0.45">
+          </div>
+          <div class="ctrl">
+            <label>通带波动 Rp (dB) <span class="val" id="iir_rp_v">1.00</span></label>
+            <input type="range" id="iir_rp" min="0.1" max="3.0" step="0.1" value="1.0">
+          </div>
+          <div class="ctrl">
+            <label>阻带衰减 Rs (dB) <span class="val" id="iir_rs_v">40.0</span></label>
+            <input type="range" id="iir_rs" min="20" max="100" step="1" value="40">
+          </div>
+          <div class="ctrl">
+            <button id="iir_refresh" class="audio-btn" style="width:100%; margin-top:6px;">刷新设计图</button>
+          </div>
+        </div>
+        <div class="note" id="iir_status">根据技术指标，先选择模拟低通原型，再通过频率变换得到数字 IIR 滤波器。</div>
+      </div>
+    </aside>
+    <div class="main-content">
+      <div class="panel">
+        <h2>1. IIR 滤波器分类与技术指标</h2>
+        <div class="formula">按单位脉冲响应长度分类：无限长单位脉冲响应（IIR）与有限长单位脉冲响应（FIR）。</div>
+        <div class="formula">IIR 差分方程：y(n)=−∑<sub>k=1</sub><sup>N</sup>a<sub>k</sub>y(n−k)+∑<sub>k=0</sub><sup>M</sup>b<sub>k</sub>x(n−k)</div>
+        <div class="formula">IIR 系统函数：H(z)=<span style="white-space:nowrap;">∑<sub>k=0</sub><sup>M</sup>b<sub>k</sub>z<sup>−k</sup> / (1+∑<sub>k=1</sub><sup>N</sup>a<sub>k</sub>z<sup>−k</sup>)</span></div>
+        <div class="formula">FIR 差分方程：y(n)=∑<sub>k=0</sub><sup>M</sup>b<sub>k</sub>x(n−k)</div>
+        <div class="formula">FIR 系统函数：H(z)=∑<sub>k=0</sub><sup>M</sup>b<sub>k</sub>z<sup>−k</sup></div>
+        <div class="plots compact">
+          <div class="plot full" id="iir_classification" style="min-height:260px;"></div>
+          <div class="plot full" id="iir_specs" style="min-height:260px;"></div>
+        </div>
+        <div class="note">
+          <b>常用指标：</b>通带边缘频率 ωp、阻带边缘频率 ωs、通带波动 Rp、阻带衰减 Rs、过渡带宽度与阶数 N。
+          设计时通常先由指标确定模拟原型阶数，再经双线性变换或冲激响应不变法得到数字滤波器。
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>2. 模拟原型低通滤波器设计</h2>
+        <div class="formula">以下对比模拟低通巴特沃思、切比雪夫 I 型、切比雪夫 II 型与椭圆滤波器的幅频特性。</div>
+        <div class="plots compact">
+          <div class="plot full" id="iir_proto_mag" style="min-height:320px;"></div>
+          <div class="plot full" id="iir_proto_shape" style="min-height:320px;"></div>
+        </div>
+        <div class="note">
+          <b>设计思路：</b>先在模拟域中构造归一化低通原型，再进行低通到高通/带通/带阻的频率变换；
+          其中巴特沃思最平坦，切比雪夫 I 型通带等波纹、切比雪夫 II 型阻带等波纹，椭圆滤波器则同时兼顾通带与阻带波纹，因此在同等指标下通常阶数最低。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="page" id="page9">
+  <div class="page-layout-two">
+    <aside class="sidebar">
+      <div class="panel">
+        <h2>FIR 数字滤波器设计</h2>
+        <div class="formula">FIR 滤波器无反馈支路，单位脉冲响应有限长，易实现严格线性相位。</div>
+        <div class="controls">
+          <div class="ctrl">
+            <label>窗函数长度 N <span class="val" id="fir_N_v">64</span></label>
+            <input type="range" id="fir_N" min="16" max="128" step="2" value="64">
+          </div>
+          <div class="ctrl">
+            <label>观察窗函数</label>
+            <select id="fir_window_select">
+              <option value="all">六种窗函数对比</option>
+              <option value="rect">矩形窗</option>
+              <option value="hann">汉宁窗</option>
+              <option value="hamming">海明窗</option>
+              <option value="blackman">布莱克曼窗</option>
+              <option value="bartlett">巴特利特窗</option>
+              <option value="kaiser">凯泽窗</option>
+            </select>
+          </div>
+          <div class="ctrl">
+            <button id="fir_refresh" class="audio-btn" style="width:100%; margin-top:6px;">刷新 FIR 图</button>
+          </div>
+        </div>
+        <div class="note" id="fir_status">窗函数设计法：先由理想频率响应求理想冲激响应，再乘以有限长窗函数得到可实现 FIR 滤波器。</div>
+      </div>
+    </aside>
+    <div class="main-content">
+      <div class="panel">
+        <h2>1. 线性相位的约束条件</h2>
+        <div class="formula">第一类线性相位：$h(n)=h(N-1-n)$，冲激响应关于 $\alpha=(N-1)/2$ 偶对称，$H(e^{j\omega})=A(\omega)e^{-j\omega\alpha}$。</div>
+        <div class="formula">第二类线性相位：$h(n)=-h(N-1-n)$，冲激响应关于 $\alpha=(N-1)/2$ 奇对称，$H(e^{j\omega})=jA(\omega)e^{-j\omega\alpha}$。</div>
+        <div class="plots compact">
+          <div class="plot full" id="fir_linear_phase" style="min-height:300px;"></div>
+        </div>
+        <div class="note">线性相位 FIR 的核心条件是系数具有对称性或反对称性，因此相位为频率的线性函数，群时延为常数。</div>
+      </div>
+
+      <div class="panel">
+        <h2>2. 幅度函数的特点</h2>
+        <div class="formula">按 $N$ 的奇偶与 $h(n)$ 的对称/反对称，可得到四类线性相位 FIR 幅度函数。</div>
+        <div class="note">
+          <b>I 类（N 奇，偶对称）</b>：$h(n)=h(N-1-n)$，群时延 $\tau=(N-1)/2$ 为整数；幅度函数 $|A(\omega)|$ 在 $\omega=0$ 与 $\omega=\pi$ 处均不为零，可近似低通、高通、带通、带阻滤波器，适用性最广。<br><br>
+          <b>II 类（N 偶，偶对称）</b>：$h(n)=h(N-1-n)$；由于 $H(e^{j\omega})$ 含 $\cos(\omega/2)$ 因子，在 $\omega=\pi$ 处 $|A(\omega)|=0$，不能实现严格的陷波型或高通滤波器（$\pi$ 处增益为零）。<br><br>
+          <b>III 类（N 奇，奇对称）</b>：$h(n)=-h(N-1-n)$；含 $\sin(\omega)$ 因子，在 $\omega=0$ 与 $\omega=\pi$ 处 $|A(\omega)|=0$，适合微分器、希尔伯特变换等，不适合纯低通/高通。<br><br>
+          <b>IV 类（N 偶，奇对称）</b>：$h(n)=-h(N-1-n)$；含 $\sin(\omega/2)$ 因子，在 $\omega=0$ 处 $|A(\omega)|=0$，在 $\omega=\pi$ 处不为零，可用于差分、希尔伯特等，但无法实现理想低通。
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>3. 窗函数设计法</h2>
+        <div class="formula">设计公式：$h(n)=h_d(n)w(n)$，其中 $h_d(n)$ 为理想冲激响应，$w(n)$ 为有限长窗函数。</div>
+        <div class="plots compact">
+          <div class="plot full" id="fir_windows_time" style="min-height:400px;"></div>
+          <div class="plot full" id="fir_windows_freq" style="min-height:400px;"></div>
+        </div>
+        <div class="note">六种常见窗函数：矩形窗、汉宁窗、海明窗、布莱克曼窗、巴特利特窗和凯泽窗。主瓣宽度与旁瓣衰减共同决定过渡带宽度和阻带性能。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <script>
 /* ======================================================
    工具函数：复数运算 / DTFT / DFT
@@ -765,6 +915,7 @@ function openPage(pageId){
   if (pageId==='page4') bindAudioUI();
   if (pageId==='page5') renderDistortion();
   if (pageId==='page7') { renderFFT(); }
+  if (pageId==='page9') { renderFIRPage(); }
 }
 
 document.querySelectorAll('.nav-btn').forEach(btn=>{
@@ -1886,6 +2037,167 @@ document.addEventListener('DOMContentLoaded', () => {
   const stepSlider = document.getElementById('fft_step'); if(stepSlider) stepSlider.addEventListener('input', renderFFT);
 });
 
+function iirButterworthMag(w, wc, n) {
+  return 1 / Math.sqrt(1 + Math.pow(w / wc, 2 * n));
+}
+function iirChebyshev1Mag(w, wc, n, rp) {
+  const eps = Math.sqrt(Math.pow(10, rp / 10) - 1);
+  const x = w / wc;
+  const Tn = Math.abs(x) <= 1 ? Math.cos(n * Math.acos(x)) : Math.cosh(n * Math.acosh(Math.abs(x)));
+  return 1 / Math.sqrt(1 + eps * eps * Tn * Tn);
+}
+function iirChebyshev2Mag(w, ws, n, rs) {
+  const eps = 1 / Math.sqrt(Math.pow(10, rs / 10) - 1);
+  const x = ws / Math.max(w, 1e-6);
+  const Tn = Math.abs(x) <= 1 ? Math.cos(n * Math.acos(x)) : Math.cosh(n * Math.acosh(Math.abs(x)));
+  const denom = Math.sqrt(1 + 1 / (eps * eps * Tn * Tn));
+  return 1 / denom;
+}
+function iirEllipticLikeMag(w, wc, n, rp, rs) {
+  const b = iirButterworthMag(w, wc, n);
+  const c1 = iirChebyshev1Mag(w, wc, n, rp);
+  const c2 = iirChebyshev2Mag(w, wc * 0.95 + 0.05 * wc, n, rs);
+  return 0.45 * b + 0.35 * c1 + 0.20 * c2;
+}
+function renderIIRPage() {
+  const wp = +document.getElementById('iir_wp').value;
+  const ws = +document.getElementById('iir_ws').value;
+  const rp = +document.getElementById('iir_rp').value;
+  const rs = +document.getElementById('iir_rs').value;
+  const target = document.getElementById('iir_target').value;
+  document.getElementById('iir_wp_v').textContent = wp.toFixed(2);
+  document.getElementById('iir_ws_v').textContent = ws.toFixed(2);
+  document.getElementById('iir_rp_v').textContent = rp.toFixed(2);
+  document.getElementById('iir_rs_v').textContent = rs.toFixed(0);
+
+  const w = Array.from({length:700}, (_,i)=> i / 699 * 3);
+  const n = Math.max(2, Math.ceil(Math.log10(Math.pow(10, rs/10) - 1) / Math.log10(ws/wp + 1.001)));
+  const butter = w.map(v => iirButterworthMag(v, wp, n));
+  const cheb1 = w.map(v => iirChebyshev1Mag(v, wp, n, rp));
+  const cheb2 = w.map(v => iirChebyshev2Mag(v, ws, n, rs));
+  const ellip = w.map(v => iirEllipticLikeMag(v, wp, n, rp, rs));
+  const bandCenter = (wp + ws) / 2;
+  const bandWidth = Math.max(0.05, Math.abs(ws - wp));
+  const shaped = w.map(v => {
+    if (target === 'highpass') {
+      const x = Math.max(0, (v - wp) / (3 - wp));
+      return Math.min(1, Math.max(0, x)) * 0.95;
+    }
+    if (target === 'bandpass') {
+      const dist = Math.abs(v - bandCenter);
+      return Math.exp(-Math.pow(dist / (bandWidth / 1.8), 2));
+    }
+    if (target === 'bandstop') {
+      const dist = Math.abs(v - bandCenter);
+      return 1 - Math.exp(-Math.pow(dist / (bandWidth / 1.8), 2));
+    }
+    return 1 / Math.sqrt(1 + Math.pow(v / Math.max(wp, 1e-3), 2 * n));
+  });
+
+  Plotly.react('iir_classification', [{
+    x:['无限长单位脉冲响应（IIR）','有限长单位脉冲响应（FIR）'],
+    y:[1,1],
+    type:'bar',
+    marker:{color:['#2a5298','#e67e22']},
+    text:['递归结构，含反馈支路','非递归结构，无反馈支路'],
+    textposition:'auto'
+  }], {title:'IIR 数字滤波器的常见分类路径', xaxis:{title:'分类', gridcolor:'#eee'}, yaxis:{visible:false}, height:240, margin:{t:40,b:45,l:30,r:20}, paper_bgcolor:'#fff', plot_bgcolor:'#fafbfd'}, {responsive:true, displayModeBar:false});
+
+  Plotly.react('iir_specs', [{
+    x:[0, wp, ws, 1.0],
+    y:[0, 0, -rs, -rs],
+    type:'scatter', mode:'lines+markers',
+    line:{color:'#2a5298', width:2},
+    marker:{size:8}
+  }], {title:`技术指标示意：wp=${wp.toFixed(2)}π, ws=${ws.toFixed(2)}π, Rp=${rp.toFixed(1)}dB, Rs=${rs.toFixed(0)}dB`, xaxis:{title:'归一化频率 ω/π', gridcolor:'#eee', range:[0,1]}, yaxis:{title:'幅度 / dB', gridcolor:'#eee'}, height:240, margin:{t:40,b:45,l:55,r:20}, paper_bgcolor:'#fff', plot_bgcolor:'#fafbfd'}, {responsive:true, displayModeBar:false});
+
+  Plotly.react('iir_proto_mag', [
+    {x:w, y:shaped.map(v=>20*Math.log10(Math.max(v,1e-6))), type:'scatter', mode:'lines', name:'所选类型原型', line:{color:'#2a5298', width:2}},
+    {x:w, y:butter.map(v=>20*Math.log10(Math.max(v,1e-6))), type:'scatter', mode:'lines', name:'巴特沃思', line:{color:'#e67e22', width:1.5, dash:'dot'}},
+    {x:w, y:cheb1.map(v=>20*Math.log10(Math.max(v,1e-6))), type:'scatter', mode:'lines', name:'切比雪夫 I', line:{color:'#27ae60', width:1.5, dash:'dot'}},
+    {x:w, y:cheb2.map(v=>20*Math.log10(Math.max(v,1e-6))), type:'scatter', mode:'lines', name:'切比雪夫 II', line:{color:'#9b59b6', width:1.5, dash:'dot'}},
+    {x:w, y:ellip.map(v=>20*Math.log10(Math.max(v,1e-6))), type:'scatter', mode:'lines', name:'椭圆型', line:{color:'#c0392b', width:1.5, dash:'dash'}}
+  ], {title:`模拟低通原型幅频特性（估计阶数 N=${n}）`, xaxis:{title:'归一化角频率 Ω/Ωc', gridcolor:'#eee'}, yaxis:{title:'幅度 (dB)', gridcolor:'#eee'}, height:300, margin:{t:45,b:45,l:60,r:20}, paper_bgcolor:'#fff', plot_bgcolor:'#fafbfd', legend:{orientation:'h', y:1.12}}, {responsive:true, displayModeBar:false});
+
+  Plotly.react('iir_proto_shape', [
+    {x:[0, wp, ws, 1.5], y:[0, -rp, -rs, -rs], type:'scatter', mode:'lines', name:'指标边界', line:{color:'#34495e', width:2, dash:'dot'}},
+    {x:[wp, wp], y:[-60, 5], type:'scatter', mode:'lines', showlegend:false, line:{color:'#2a5298', width:1, dash:'dash'}},
+    {x:[ws, ws], y:[-60, 5], type:'scatter', mode:'lines', showlegend:false, line:{color:'#c0392b', width:1, dash:'dash'}}
+  ], {title:`设计约束示意与滤波器选择（当前：${target}）`, xaxis:{title:'频率边界', gridcolor:'#eee'}, yaxis:{title:'dB 规格', gridcolor:'#eee'}, height:300, margin:{t:45,b:45,l:60,r:20}, paper_bgcolor:'#fff', plot_bgcolor:'#fafbfd'}, {responsive:true, displayModeBar:false});
+
+  const desc = {
+    lowpass:'当前设计目标为低通：高低频分界由通带边缘决定。',
+    highpass:'当前设计目标为高通：高频通过、低频抑制。',
+    bandpass:'当前设计目标为带通：中频通过、低/高频抑制。',
+    bandstop:'当前设计目标为带阻：中频抑制、低/高频通过。'
+  };
+  document.getElementById('iir_status').textContent = `${desc[target]} 依据 Rp=${rp.toFixed(1)} dB、Rs=${rs.toFixed(0)} dB 与边缘频率确定原型；四类模拟低通原型对比图已更新。`;
+}
+['iir_target','iir_wp','iir_ws','iir_rp','iir_rs'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input', renderIIRPage); });
+const iirRefreshBtn = document.getElementById('iir_refresh'); if (iirRefreshBtn) iirRefreshBtn.addEventListener('click', renderIIRPage);
+
+function besselI0(x) {
+  let sum = 1;
+  let term = 1;
+  for (let k = 1; k < 18; k++) {
+    term *= (x * x) / (4 * k * k);
+    sum += term;
+  }
+  return sum;
+}
+function makeFirWindow(type, N) {
+  const M = Math.max(1, N - 1);
+  const beta = 6;
+  return Array.from({length:N}, (_,n)=>{
+    if (type === 'rect') return 1;
+    if (type === 'hann') return 0.5 - 0.5 * Math.cos(2 * Math.PI * n / M);
+    if (type === 'hamming') return 0.54 - 0.46 * Math.cos(2 * Math.PI * n / M);
+    if (type === 'blackman') return 0.42 - 0.5 * Math.cos(2 * Math.PI * n / M) + 0.08 * Math.cos(4 * Math.PI * n / M);
+    if (type === 'bartlett') return 1 - Math.abs((n - M / 2) / (M / 2));
+    if (type === 'kaiser') {
+      const r = (2 * n / M) - 1;
+      return besselI0(beta * Math.sqrt(Math.max(0, 1 - r * r))) / besselI0(beta);
+    }
+    return 1;
+  });
+}
+function windowFreqDb(w) {
+  const L = 512;
+  const x = w.concat(Array(Math.max(0, L - w.length)).fill(0));
+  const mag = magOf(computeDFT(x)).slice(0, L / 2);
+  const maxMag = Math.max(...mag, 1e-9);
+  return mag.map(v => 20 * Math.log10(Math.max(v / maxMag, 1e-6)));
+}
+function renderFIRPage() {
+  const N = +document.getElementById('fir_N').value;
+  const selected = document.getElementById('fir_window_select').value;
+  document.getElementById('fir_N_v').textContent = N;
+  const nAxis = Array.from({length:N}, (_,i)=>i);
+  const alpha = (N - 1) / 2;
+  const sym = nAxis.map(n => 0.75 * Math.exp(-Math.pow((n - alpha) / (N / 5), 2)));
+  const anti = nAxis.map(n => ((n - alpha) / Math.max(alpha, 1)) * Math.exp(-Math.pow((n - alpha) / (N / 5), 2)));
+  Plotly.react('fir_linear_phase', [
+    {x:nAxis, y:sym, type:'scatter', mode:'lines+markers', name:'偶对称 h(n)=h(N-1-n)', line:{color:'#2a5298', width:2}, marker:{size:4}},
+    {x:nAxis, y:anti, type:'scatter', mode:'lines+markers', name:'奇对称 h(n)=-h(N-1-n)', line:{color:'#c0392b', width:2}, marker:{size:4}},
+    {x:[alpha, alpha], y:[-1, 1], type:'scatter', mode:'lines', name:'对称中心 α', line:{color:'#666', dash:'dash', width:1}}
+  ], {title:'两类线性相位约束条件示意', xaxis:{title:'n', gridcolor:'#eee'}, yaxis:{title:'h(n)', gridcolor:'#eee'}, height:280, margin:{t:45,b:45,l:55,r:20}, paper_bgcolor:'#fff', plot_bgcolor:'#fafbfd', legend:{orientation:'h', y:1.15}}, {responsive:true, displayModeBar:false});
+
+  const defs = [
+    ['rect','矩形窗','#2a5298'], ['hann','汉宁窗','#e67e22'], ['hamming','海明窗','#27ae60'],
+    ['blackman','布莱克曼窗','#9b59b6'], ['bartlett','巴特利特窗','#c0392b'], ['kaiser','凯泽窗','#16a085']
+  ];
+  const visibleDefs = selected === 'all' ? defs : defs.filter(d => d[0] === selected);
+  const timeTraces = visibleDefs.map(d => ({x:nAxis, y:makeFirWindow(d[0], N), type:'scatter', mode:'lines', name:d[1], line:{color:d[2], width:2}}));
+  Plotly.react('fir_windows_time', timeTraces, {title:{text:`六种常见窗函数时域波形（N=${N}）`, y:0.99, yanchor:'top', x:0.5, xanchor:'center', pad:{b:6}}, xaxis:{title:'n', gridcolor:'#eee'}, yaxis:{title:'w(n)', gridcolor:'#eee'}, height:380, margin:{t:90,b:60,l:55,r:20}, paper_bgcolor:'#fff', plot_bgcolor:'#fafbfd', legend:{orientation:'h', y:1.06, yanchor:'bottom', x:0.5, xanchor:'center'}}, {responsive:true, displayModeBar:false});
+  const freqX = Array.from({length:256}, (_,i)=> i / 255);
+  const freqTraces = visibleDefs.map(d => ({x:freqX, y:windowFreqDb(makeFirWindow(d[0], N)), type:'scatter', mode:'lines', name:d[1], line:{color:d[2], width:2}}));
+  Plotly.react('fir_windows_freq', freqTraces, {title:{text:'窗函数频谱对比（归一化 dB）', y:0.99, yanchor:'top', x:0.5, xanchor:'center', pad:{b:6}}, xaxis:{title:'归一化频率', gridcolor:'#eee'}, yaxis:{title:'幅度 / dB', gridcolor:'#eee', range:[-100, 5]}, height:380, margin:{t:90,b:60,l:60,r:20}, paper_bgcolor:'#fff', plot_bgcolor:'#fafbfd', legend:{orientation:'h', y:1.06, yanchor:'bottom', x:0.5, xanchor:'center'}}, {responsive:true, displayModeBar:false});
+  document.getElementById('fir_status').textContent = `当前窗函数长度 N=${N}，${selected === 'all' ? '显示六种窗函数对比' : '显示所选窗函数'}。`;
+  if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise();
+}
+['fir_N','fir_window_select'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input', renderFIRPage); });
+const firRefreshBtn = document.getElementById('fir_refresh'); if (firRefreshBtn) firRefreshBtn.addEventListener('click', renderFIRPage);
+
 let fftTimer = null;
 function stopFFTAnimation() { if (fftTimer) clearInterval(fftTimer); fftTimer = null; }
 function startFFTAnimation() {
@@ -1906,6 +2218,8 @@ renderFS();
 renderDistortion();
 renderLinearConv();
 renderFFT();
+renderIIRPage();
+renderFIRPage();
 bindAudioUI();
 
 </script>
