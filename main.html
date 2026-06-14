@@ -270,7 +270,7 @@
   .plots.compact .plot.large { min-height: 380px; }
   .page-layout-two {
     display: grid;
-    grid-template-columns: 260px minmax(0, 1fr);
+    grid-template-columns: 220px minmax(0, 1fr);
     gap: 16px;
     align-items: start;
   }
@@ -279,6 +279,7 @@
     top: 72px;
     align-self: start;
     width: 100%;
+    max-width: 220px;
     z-index: 1;
   }
   .page-layout-two .sidebar .panel {
@@ -389,6 +390,186 @@
     width: 100%;
     overflow: hidden;
   }
+  .zt-illustration {
+    background: linear-gradient(135deg, #f8fbff 0%, #eef4fc 100%);
+    border: 1px solid #d5e0f0;
+    border-radius: 10px;
+    padding: 16px 12px 8px;
+    margin: 12px 0 16px;
+    overflow-x: auto;
+  }
+  .zt-illustration svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+  .zt-pairs {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 10px 0;
+  }
+  .zt-pairs th, .zt-pairs td {
+    border: 1px solid #dde5f0;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .zt-pairs th { background: #eef3fa; color: #1e3c72; }
+  .zt-pairs td:first-child { background: #f9fbfe; font-weight: 600; }
+  .zt-info-box {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin: 12px 0;
+  }
+  .zt-info-card {
+    background: #f7f9fc;
+    border-left: 4px solid #2a5298;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .zt-info-card b { color: #1e3c72; }
+  .ola-step-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 10px 0;
+  }
+  .ola-step-table th, .ola-step-table td {
+    border: 1px solid #dde5f0;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .ola-step-table th { background: #eef3fa; color: #1e3c72; }
+  .ola-step-table td:first-child { background: #f9fbfe; font-weight: 600; white-space: nowrap; }
+  .ola-highlight { background: #fff3cd; font-weight: 700; color: #856404; }
+  .ola-acc { background: #e8f5e9; font-weight: 700; color: #2e7d32; }
+  .ola-discard { color: #aaa; text-decoration: line-through; }
+  .ola-block-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0 14px;
+  }
+  .ola-block-nav button {
+    flex: 1;
+    min-width: 72px;
+    padding: 10px 8px;
+    border: 1px solid #cfd6e0;
+    border-radius: 8px;
+    background: #f7f9fc;
+    color: #334;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+  .ola-block-nav button:hover { background: #eef3fa; border-color: #2a5298; }
+  .ola-block-nav button.active {
+    background: #2a5298;
+    color: #fff;
+    border-color: #2a5298;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(42,82,152,0.25);
+  }
+  .ola-seg-wrap { margin: 12px 0 16px; }
+  .ola-seg-title { font-size: 13px; color: #1e3c72; font-weight: 600; margin-bottom: 8px; }
+  .ola-seg-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: stretch;
+  }
+  .ola-seg-cell {
+    min-width: 42px;
+    padding: 8px 4px;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 12px;
+    border: 2px solid transparent;
+    line-height: 1.3;
+  }
+  .ola-seg-cell .idx { display: block; font-size: 10px; opacity: 0.75; }
+  .ola-seg-cell .val { display: block; font-weight: 700; font-size: 14px; }
+  .ola-seg-cell.current { border-color: #c0392b; box-shadow: 0 0 0 2px rgba(192,57,43,0.2); transform: scale(1.05); }
+  .ola-seg-cell.overlap { outline: 2px dashed #e67e22; outline-offset: 1px; }
+  .ola-seg-cell.pad { opacity: 0.45; border-style: dashed; }
+  .ola-seg-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; font-size: 12px; color: #556; }
+  .ola-seg-legend span { display: inline-flex; align-items: center; gap: 4px; }
+  .ola-seg-legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .corr-align-wrap { margin: 12px 0 16px; overflow-x: auto; }
+  .corr-align-title { font-size: 13px; color: #1e3c72; font-weight: 600; margin-bottom: 8px; }
+  .corr-align-table {
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 8px 0;
+    min-width: 100%;
+  }
+  .corr-align-table th, .corr-align-table td {
+    border: 1px solid #dde5f0;
+    padding: 8px 10px;
+    text-align: center;
+    min-width: 52px;
+  }
+  .corr-align-table th { background: #eef3fa; color: #1e3c72; font-weight: 600; }
+  .corr-align-table .row-label { background: #f9fbfe; font-weight: 600; white-space: nowrap; text-align: right; }
+  .corr-align-table .overlap { background: #fff3cd; font-weight: 700; color: #856404; }
+  .corr-align-table .empty { color: #bbb; background: #fafbfd; }
+  .corr-align-table .sum-row td { background: #e8f5e9; font-weight: 700; color: #2e7d32; }
+  .corr-flip-vis {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 12px 0;
+    padding: 14px;
+    background: linear-gradient(135deg, #f8fbff 0%, #eef4fc 100%);
+    border: 1px solid #d5e0f0;
+    border-radius: 10px;
+  }
+  .corr-flip-box {
+    text-align: center;
+    min-width: 120px;
+  }
+  .corr-flip-box .label { font-size: 12px; color: #556; margin-bottom: 6px; font-weight: 600; }
+  .corr-flip-box .vals {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .corr-flip-box .chip {
+    min-width: 36px;
+    padding: 6px 4px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    border: 2px solid transparent;
+  }
+  .corr-flip-arrow { font-size: 28px; color: #2a5298; font-weight: 700; }
+  .corr-relation-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+    margin: 12px 0;
+  }
+  .corr-relation-card {
+    background: #f7f9fc;
+    border-left: 4px solid #2a5298;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .corr-relation-card b { color: #1e3c72; }
+  .ola-step-card {
+    border: 1px solid #dde5f0;
+    border-left: 4px solid #2a5298;
+    border-radius: 8px;
+    padding: 14px;
+    background: #fcfdff;
+    margin-bottom: 12px;
+  }
+  .ola-step-card h3 { font-size: 15px; color: #1e3c72; margin-bottom: 10px; }
   @media (max-width: 800px) {
     .plots { grid-template-columns: 1fr; }
   }
@@ -409,6 +590,7 @@
       <button class="nav-btn active" type="button">第二章</button>
       <div class="nav-dropdown">
         <button class="nav-sub-btn active" type="button" data-page="page1">DTFT 与 DFT 对比</button>
+        <button class="nav-sub-btn" type="button" data-page="page10">Z 变换</button>
         <button class="nav-sub-btn" type="button" data-page="page4">语音采样与奈奎斯特验证</button>
       </div>
     </div>
@@ -424,18 +606,22 @@
       <div class="nav-dropdown">
         <button class="nav-sub-btn" type="button" data-page="page5">模拟信号三次失真</button>
         <button class="nav-sub-btn" type="button" data-page="page6">线性卷积与圆周卷积关系</button>
+        <button class="nav-sub-btn" type="button" data-page="page12">线性相关计算</button>
+        <button class="nav-sub-btn" type="button" data-page="page11">重叠相加与重叠保留</button>
       </div>
     </div>
     <div class="nav-item">
       <button class="nav-btn" type="button">第五章</button>
       <div class="nav-dropdown">
         <button class="nav-sub-btn" type="button" data-page="page7">8 点 FFT 算法流程图</button>
+        <button class="nav-sub-btn" type="button" data-page="page13">DIF 的 FFT 算法原理</button>
       </div>
     </div>
     <div class="nav-item">
       <button class="nav-btn" type="button">第六章</button>
       <div class="nav-dropdown">
         <button class="nav-sub-btn" type="button" data-page="page8">IIR 数字滤波器设计</button>
+        <button class="nav-sub-btn" type="button" data-page="page14">音频选择与滤波播放</button>
       </div>
     </div>
     <div class="nav-item">
@@ -610,6 +796,182 @@
   </div>
 </section>
 
+<section class="page" id="page14">
+  <div class="page-layout-two">
+    <aside class="sidebar">
+      <div class="panel">
+        <h2>音频滤波参数</h2>
+        <div class="formula">选择音频文件，通过滤波器后再播放输出。</div>
+        <div class="controls">
+          <div class="ctrl">
+            <label>选择音频文件</label>
+            <input type="file" id="af_file" accept="audio/*,.mp4,audio/mp4,video/mp4">
+          </div>
+          <div class="ctrl">
+            <label>滤波器类型</label>
+            <select id="af_type">
+              <option value="lowpass">低通滤波器</option>
+              <option value="highpass">高通滤波器</option>
+              <option value="bandpass">带通滤波器</option>
+              <option value="bandstop">带阻滤波器</option>
+            </select>
+          </div>
+          <div class="ctrl">
+            <label>截止频率 / Hz <span class="val" id="af_fc_v">3000</span></label>
+            <input type="range" id="af_fc" min="200" max="10000" step="100" value="3000">
+          </div>
+          <div class="ctrl">
+            <button id="af_play" class="audio-btn" style="width:100%; margin-top:6px;">播放滤波后音频</button>
+          </div>
+          <div class="ctrl">
+            <button id="af_stop" class="audio-btn" style="width:100%; margin-top:0;">停止播放</button>
+          </div>
+          <div class="note">支持常见音频文件，也支持 `.mp4` 文件。</div>
+        </div>
+        <div class="note" id="af_status">请选择一个音频文件，然后点击“播放滤波后音频”。</div>
+      </div>
+    </aside>
+    <div class="main-content">
+      <div class="panel">
+        <h2>音频选择与滤波播放</h2>
+        <div class="formula">上传音频后，先通过所选滤波器，再播放处理后的结果。</div>
+        <div class="corr-relation-cards">
+          <div class="corr-relation-card"><b>步骤 1</b><br>选择本地音频文件。</div>
+          <div class="corr-relation-card"><b>步骤 2</b><br>选择低通/高通/带通/带阻滤波器。</div>
+          <div class="corr-relation-card"><b>步骤 3</b><br>点击播放，听滤波后的音频。</div>
+        </div>
+        <div class="plots compact">
+          <div class="plot full" id="af_wave"></div>
+          <div class="plot full" id="af_spec"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="page" id="page10">
+  <div class="page-layout-two">
+    <aside class="sidebar">
+      <div class="panel">
+        <h2>参数调节</h2>
+        <div class="formula">选择典型序列或系统，观察 Z 变换、收敛域与零极点分布。</div>
+        <select class="seq-select" id="zt_type">
+          <option value="impulse">单位冲激 δ(n)</option>
+          <option value="step">单位阶跃 u(n)</option>
+          <option value="exp">因果指数 aⁿu(n)</option>
+          <option value="rect">矩形序列 R<sub>N</sub>(n)</option>
+          <option value="iir1">一阶系统 1/(1−az⁻¹)</option>
+          <option value="iir2">二阶系统 1/(1−a₁z⁻¹−a₂z⁻²)</option>
+        </select>
+        <div class="controls" id="zt_controls">
+          <div class="ctrl" id="zt_ctrl_a">
+            <label>参数 a <span class="val" id="zt_a_v">0.80</span></label>
+            <input type="range" id="zt_a" min="-0.95" max="0.95" step="0.01" value="0.80">
+          </div>
+          <div class="ctrl" id="zt_ctrl_N" style="display:none;">
+            <label>矩形长度 N <span class="val" id="zt_N_v">8</span></label>
+            <input type="range" id="zt_N" min="2" max="24" step="1" value="8">
+          </div>
+          <div class="ctrl" id="zt_ctrl_a1" style="display:none;">
+            <label>参数 a₁ <span class="val" id="zt_a1_v">1.20</span></label>
+            <input type="range" id="zt_a1" min="-1.50" max="1.50" step="0.01" value="1.20">
+          </div>
+          <div class="ctrl" id="zt_ctrl_a2" style="display:none;">
+            <label>参数 a₂ <span class="val" id="zt_a2_v">-0.44</span></label>
+            <input type="range" id="zt_a2" min="-1.20" max="1.20" step="0.01" value="-0.44">
+          </div>
+        </div>
+        <div class="note" id="zt_status">Z 变换将离散时域序列映射到复变量 z 的频域。</div>
+      </div>
+    </aside>
+    <div class="main-content">
+      <div class="panel">
+        <h2>Z 变换 · 定义、收敛域与零极点</h2>
+        <div class="formula">
+          双边 Z 变换：X(z) = Σ<sub>n=−∞</sub><sup>∞</sup> x(n)·z<sup>−n</sup> &nbsp;&nbsp;|&nbsp;&nbsp;
+          单位圆上：z = e<sup>jω</sup> 时退化为 DTFT
+        </div>
+
+        <div class="zt-illustration">
+          <svg viewBox="0 0 820 220" width="820" height="220" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="zt-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="#2a5298"/>
+              </marker>
+              <linearGradient id="zt-bg1" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#ffffff"/>
+                <stop offset="100%" stop-color="#e8f0fb"/>
+              </linearGradient>
+            </defs>
+            <rect x="10" y="20" width="230" height="170" rx="12" fill="url(#zt-bg1)" stroke="#b8cce8"/>
+            <text x="125" y="48" text-anchor="middle" font-size="15" fill="#1e3c72" font-weight="600">离散时域 n</text>
+            <line x1="40" y1="150" x2="210" y2="150" stroke="#667" stroke-width="1.5" marker-end="url(#zt-arrow)"/>
+            <text x="125" y="168" text-anchor="middle" font-size="12" fill="#556">n</text>
+            <rect x="55" y="115" width="18" height="35" fill="#2a5298" opacity="0.85"/>
+            <rect x="83" y="95" width="18" height="55" fill="#2a5298" opacity="0.65"/>
+            <rect x="111" y="105" width="18" height="45" fill="#2a5298" opacity="0.45"/>
+            <rect x="139" y="125" width="18" height="25" fill="#2a5298" opacity="0.30"/>
+            <text x="64" y="110" font-size="11" fill="#2a5298">x[0]</text>
+            <text x="92" y="90" font-size="11" fill="#2a5298">x[1]</text>
+            <text x="120" y="100" font-size="11" fill="#2a5298">x[2]</text>
+            <text x="148" y="120" font-size="11" fill="#2a5298">x[3]</text>
+
+            <rect x="280" y="55" width="180" height="100" rx="12" fill="#fff" stroke="#2a5298" stroke-width="2"/>
+            <text x="370" y="95" text-anchor="middle" font-size="22" fill="#1e3c72" font-weight="700">𝒵{·}</text>
+            <text x="370" y="125" text-anchor="middle" font-size="13" fill="#445">Z 变换算子</text>
+            <line x1="240" y1="105" x2="278" y2="105" stroke="#2a5298" stroke-width="2" marker-end="url(#zt-arrow)"/>
+            <line x1="460" y1="105" x2="498" y2="105" stroke="#2a5298" stroke-width="2" marker-end="url(#zt-arrow)"/>
+
+            <rect x="500" y="20" width="300" height="170" rx="12" fill="url(#zt-bg1)" stroke="#b8cce8"/>
+            <text x="650" y="48" text-anchor="middle" font-size="15" fill="#1e3c72" font-weight="600">Z 平面（复平面）</text>
+            <circle cx="590" cy="115" r="55" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="5,4"/>
+            <text x="650" y="118" text-anchor="middle" font-size="11" fill="#888">|z|=1</text>
+            <line x1="530" y1="115" x2="770" y2="115" stroke="#ccd6e4" stroke-width="1"/>
+            <line x1="650" y1="55" x2="650" y2="175" stroke="#ccd6e4" stroke-width="1"/>
+            <text x="775" y="118" font-size="11" fill="#667">Re</text>
+            <text x="655" y="52" font-size="11" fill="#667">Im</text>
+            <circle cx="650" cy="115" r="5" fill="none" stroke="#27ae60" stroke-width="2.5"/>
+            <text x="662" y="108" font-size="11" fill="#27ae60">零点</text>
+            <path d="M620,90 L628,98 M628,90 L620,98" stroke="#c0392b" stroke-width="2.5"/>
+            <text x="632" y="88" font-size="11" fill="#c0392b">极点</text>
+            <path d="M700,115 A55,55 0 0,1 590,115" fill="none" stroke="#e67e22" stroke-width="2"/>
+            <text x="680" y="95" font-size="11" fill="#e67e22">z=e^jω</text>
+            <rect x="530" y="148" width="240" height="32" rx="6" fill="rgba(42,82,152,0.08)" stroke="none"/>
+            <text x="650" y="168" text-anchor="middle" font-size="12" fill="#334">ROC：使级数收敛的 z 取值区域</text>
+          </svg>
+        </div>
+
+        <div class="zt-info-box">
+          <div class="zt-info-card" id="zt_formula_box"><b>当前 X(z)：</b><span id="zt_formula">—</span></div>
+          <div class="zt-info-card" id="zt_roc_box"><b>收敛域 ROC：</b><span id="zt_roc">—</span></div>
+          <div class="zt-info-card" id="zt_pz_box"><b>零极点：</b><span id="zt_pz">—</span></div>
+        </div>
+
+        <table class="zt-pairs">
+          <thead>
+            <tr><th>序列 x(n)</th><th>Z 变换 X(z)</th><th>收敛域 ROC</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>δ(n)</td><td>1</td><td>全 z 平面</td></tr>
+            <tr><td>u(n)</td><td>z / (z−1)</td><td>|z| &gt; 1</td></tr>
+            <tr><td>aⁿu(n)</td><td>z / (z−a)</td><td>|z| &gt; |a|</td></tr>
+            <tr><td>R<sub>N</sub>(n)</td><td>(1−z<sup>−N</sup>) / (1−z<sup>−1</sup>)</td><td>|z| &gt; 0</td></tr>
+            <tr><td>1/(1−az<sup>−1</sup>)</td><td>z / (z−a)</td><td>|z| &gt; |a|</td></tr>
+          </tbody>
+        </table>
+
+        <div class="plots compact">
+          <div class="plot full large" id="zt_plane"></div>
+        </div>
+        <div class="note">
+          <b>观察要点：</b>拖动左侧参数，观察零极点在 Z 平面上的位置变化。极点越接近单位圆，系统频率响应越尖锐；
+          因果稳定系统要求所有极点位于单位圆内 |z|&lt;1。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="page" id="page4">
   <div class="page-layout-two">
     <aside class="sidebar">
@@ -726,42 +1088,151 @@
   <div class="page-layout-two">
     <aside class="sidebar">
       <div class="panel">
-        <h2>参数调节</h2>
-        <div class="formula">不同参数下，观察线性卷积、圆周卷积与周期延拓的关系。</div>
+        <h2>音频选择</h2>
+        <div class="formula">选择本地音频，经过滤波器后再播放。</div>
         <div class="controls">
           <div class="ctrl">
-            <label>x(n)</label>
-            <input type="text" id="lc_x" value="1,1,1,1">
+            <label>选择音频文件</label>
+            <input type="file" id="af_file" accept="audio/*">
           </div>
           <div class="ctrl">
-            <label>h(n)</label>
-            <input type="text" id="lc_h" value="1,1,1">
+            <label>滤波器类型</label>
+            <select id="af_type">
+              <option value="lowpass">低通滤波器</option>
+              <option value="highpass">高通滤波器</option>
+              <option value="bandpass">带通滤波器</option>
+              <option value="bandstop">带阻滤波器</option>
+            </select>
           </div>
           <div class="ctrl">
-            <label>圆周长度 N <span class="val" id="lc_N_v">4</span></label>
-            <input type="range" id="lc_N" min="2" max="16" step="1" value="4">
+            <label>截止频率 / Hz <span class="val" id="af_fc_v">3000</span></label>
+            <input type="range" id="af_fc" min="200" max="10000" step="100" value="3000">
           </div>
           <div class="ctrl">
-            <label>周期延拓次数 P <span class="val" id="lc_P_v">2</span></label>
-            <input type="range" id="lc_P" min="1" max="4" step="1" value="2">
+            <button id="af_play" class="audio-btn" style="width:100%; margin-top:6px;">播放滤波后音频</button>
           </div>
+          <div class="ctrl">
+            <button id="af_stop" class="audio-btn" style="width:100%; margin-top:0;">停止播放</button>
+          </div>
+        </div>
+        <div class="note" id="af_status">请选择一个音频文件，然后点击“播放滤波后音频”。</div>
+      </div>
+    </aside>
+    <div class="main-content">
+      <div class="panel">
+        <h2>音频滤波与播放</h2>
+        <div class="formula">本页用于演示：选择音频 → 通过滤波器 → 播放输出。</div>
+        <div class="corr-relation-cards">
+          <div class="corr-relation-card"><b>原音</b><br>先加载本地音频文件。</div>
+          <div class="corr-relation-card"><b>处理</b><br>通过所选滤波器进行频域滤波。</div>
+          <div class="corr-relation-card"><b>输出</b><br>播放滤波后的音频结果。</div>
+        </div>
+        <div class="plots compact">
+          <div class="plot full" id="af_wave"></div>
+          <div class="plot full" id="af_spec"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="page" id="page12">
+  <div class="page-layout-two">
+    <aside class="sidebar">
+      <div class="panel">
+        <h2>第四章：线性相关</h2>
+        <div class="formula">只保留一个例子，配合图形展示线性相关的计算过程。</div>
+        <div class="controls">
+          <div class="ctrl">
+            <label>序列 x(n)</label>
+            <input type="text" id="corr_x" value="1,2,1">
+          </div>
+          <div class="ctrl">
+            <label>序列 y(n)</label>
+            <input type="text" id="corr_y" value="1,1,1">
+          </div>
+          <div class="ctrl">
+            <label>滞后 m <span class="val" id="corr_m_v">0</span></label>
+            <input type="range" id="corr_m" min="-2" max="2" step="1" value="0">
+          </div>
+        </div>
+        <div class="note" id="corr_status">r_xy(m) = Σ x(n)·y(n−m)</div>
+        <div class="corr-relation-cards">
+          <div class="corr-relation-card"><b>例子</b><br>x(n) = [1, 2, 1]，y(n) = [1, 1, 1]</div>
+          <div class="corr-relation-card"><b>结果</b><br>m = 0 时，r<sub>xy</sub>(0) = 4</div>
         </div>
       </div>
     </aside>
     <div class="main-content">
       <div class="panel">
-        <h2>线性卷积 vs 圆周卷积</h2>
-        <div class="formula">先用竖式法画出线性卷积结果，再将结果做向前周期延拓并按 N 点求和，得到圆周卷积。</div>
+        <h2>线性相关说明</h2>
+        <div class="formula">互相关：r<sub>xy</sub>(m) = Σ<sub>n</sub> x(n)·y(n−m)</div>
+        <div class="corr-relation-cards">
+          <div class="corr-relation-card"><b>简化展示</b><br>只保留一个例子，内容更清晰。</div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>图形与结果</h2>
+        <div class="formula" id="corr_slide_formula">x(n) = [1, 2, 1]，y(n) = [1, 1, 1]，m = 0</div>
         <div class="plots compact">
-          <div class="plot full" id="lc_linear">
-            <div style="text-align:center;font-weight:600;color:#2c3e50;margin:12px 0 4px;">竖式法线性卷积结果</div>
-            <div class="conv-array-wrap" id="lc_linear_table"></div>
+          <div class="plot full" id="corr_plot_x"></div>
+          <div class="plot full" id="corr_plot_y"></div>
+          <div class="plot full" id="corr_plot_yrev"></div>
+          <div class="plot full" id="corr_plot_result"></div>
+        </div>
+        <div id="corr_align_vis"></div>
+        <div class="note" id="corr_verify">r<sub>xy</sub>(0) = 4</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="page" id="page11">
+  <div class="page-layout-two">
+    <aside class="sidebar">
+      <div class="panel">
+        <h2>例题参数</h2>
+        <div class="formula">固定例题，分块演示两种快速卷积流程。</div>
+        <div class="controls">
+          <div class="ctrl">
+            <label>演示方法</label>
+            <select id="ola_method">
+              <option value="ola">重叠相加法</option>
+              <option value="ols">重叠保留法</option>
+            </select>
           </div>
-          <div class="plot full" id="lc_circular">
-            <div style="text-align:center;font-weight:600;color:#2c3e50;margin:12px 0 4px;">竖式查加：圆周卷积（左移 N 位与圆周长度 N 对应）</div>
-            <div class="conv-array-wrap" id="lc_circular_table"></div>
+          <div class="ctrl">
+            <label>当前分块</label>
+            <div class="ola-block-nav" id="ola_block_nav"></div>
           </div>
         </div>
+        <div class="note" id="ola_status">x(n) 长 12 点，分 3 段，h(n)=[1,1,1]，B=4，L=6，M=3。</div>
+      </div>
+    </aside>
+    <div class="main-content">
+      <div class="panel">
+        <h2>例题：长序列与 FIR 滤波器的快速卷积</h2>
+        <div class="formula" id="ola_problem_formula">
+          已知 x(n)=[1,2,…,12]（长序列 12 点，分 3 段），h(n)=[1,1,1]（FIR，M=3）；取 B=4，L=B+M−1=6。线性卷积 y(n) 作为对照标准。
+        </div>
+        <div id="ola_seg_vis"></div>
+        <div class="plots compact">
+          <div class="plot full" id="ola_compare"></div>
+        </div>
+      </div>
+      <div class="panel" id="ola_panel">
+        <h2 id="ola_title">重叠相加法（Overlap-Add）</h2>
+        <div class="formula" id="ola_formula">
+          将 x(n) 按长度 B 分段（不重叠），每段补零至 L 点后做 L 点线性卷积，各段输出在重叠区（M−1 点）<strong>相加</strong>。
+        </div>
+        <div id="ola_step_detail"></div>
+        <div id="ola_acc_table"></div>
+      </div>
+      <div class="panel">
+        <h2>线性卷积对照结果</h2>
+        <div class="formula" id="ola_ref_formula">y(n) = x(n) * h(n)</div>
+        <div id="ola_ref_table"></div>
+        <div class="note" id="ola_verify">两种分块法结果均应与线性卷积一致。</div>
       </div>
     </div>
   </div>
@@ -803,6 +1274,44 @@
         <div class="note">
           <b>说明：</b>彩色圆点从 8 个输入值出发；每到一个蝶形节点先<strong>分裂</strong>为两个，分别沿实线与交叉线流动，再在下一节点与配对支路上的圆点<strong>汇合</strong>。点击“播放流图动画”观看。
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="page" id="page13">
+  <div class="page-layout-two">
+    <aside class="sidebar">
+      <div class="panel">
+        <h2>DIF-FFT 原理</h2>
+        <div class="formula">基 2 频率抽取 FFT（Radix-2 DIF-FFT），先做蝶形运算，再递归分解子问题。</div>
+        <div class="corr-relation-cards">
+          <div class="corr-relation-card"><b>核心思想</b><br>把频域结果拆成偶频点和奇频点两部分。</div>
+          <div class="corr-relation-card"><b>第 1 步</b><br>先在输出端形成蝶形结构，完成加减运算。</div>
+          <div class="corr-relation-card"><b>第 2 步</b><br>对偶、奇分量分别继续做 4 点 FFT。</div>
+        </div>
+      </div>
+    </aside>
+    <div class="main-content">
+      <div class="panel">
+        <h2>8 点基-2 DIF-FFT 公式</h2>
+        <div class="formula">\[ X(k)=E(k)+W_N^k O(k), \quad X(k+N/2)=E(k)-W_N^k O(k) \]</div>
+        <div class="formula">\[ W_N=e^{-j2\pi/N} \]</div>
+        <div class="corr-relation-cards">
+          <div class="corr-relation-card"><b>偶频部分</b><br>\(E(k)\) 为前后两半相加后的偶分量 DFT。</div>
+          <div class="corr-relation-card"><b>奇频部分</b><br>\(O(k)\) 为前后两半相减后的奇分量 DFT。</div>
+          <div class="corr-relation-card"><b>输出特点</b><br>DIF 的输入顺序不变，输出通常按位反转排列。</div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>8 点 DIF 蝶形分解步骤</h2>
+        <div class="corr-relation-cards">
+          <div class="corr-relation-card"><b>第 1 层</b><br>8 点序列两两成对做蝶形，得到 4 个中间结果。</div>
+          <div class="corr-relation-card"><b>第 2 层</b><br>对每个 4 点子问题继续做蝶形。</div>
+          <div class="corr-relation-card"><b>第 3 层</b><br>2 点子问题直接相加、相减得到最终频谱。</div>
+          <div class="corr-relation-card"><b>理解方法</b><br>可以把 DIF 看成“先拆频域，再递归求解”。</div>
+        </div>
+        <div class="note">这一页重点是让你对照 8 点 FFT 那一页，理解 DIF 的“先蝶形、后递归”的处理方式。</div>
       </div>
     </div>
   </div>
@@ -1012,9 +1521,21 @@ function openPage(pageId){
   if (pageId==='page2') { renderCS(); renderCV(); }
   if (pageId==='page3') renderFS();
   if (pageId==='page4') bindAudioUI();
+  if (pageId==='page6') renderLinearConv();
+  if (pageId==='page12') {
+    renderLinearCorr();
+    requestAnimationFrame(() => {
+      renderLinearCorr();
+      setTimeout(renderLinearCorr, 80);
+    });
+  }
+  if (pageId==='page14') renderAudioFilterPage();
+  if (pageId==='page11') renderOLAPage();
   if (pageId==='page5') renderDistortion();
   if (pageId==='page7') { renderFFT(); }
+  if (pageId==='page13') { }
   if (pageId==='page9') { renderFIRPage(); }
+  if (pageId==='page10') renderZTPage();
 }
 
 document.querySelectorAll('.nav-sub-btn').forEach(btn=>{
@@ -1531,6 +2052,72 @@ function buildCircularConvFoldArrayHTML(x, h, N) {
   </table>`;
 }
 
+function renderAudioFilterPage() {
+  const fileEl = document.getElementById('af_file');
+  const typeEl = document.getElementById('af_type');
+  const fcEl = document.getElementById('af_fc');
+  const statusEl = document.getElementById('af_status');
+  const playBtn = document.getElementById('af_play');
+  const stopBtn = document.getElementById('af_stop');
+  const fc = +fcEl.value;
+  document.getElementById('af_fc_v').textContent = fc;
+  const file = fileEl.files && fileEl.files[0] ? fileEl.files[0] : null;
+  statusEl.textContent = file ? `已选择：${file.name}，滤波器：${typeEl.value}，截止频率：${fc} Hz。` : '请选择一个音频文件，然后点击“播放滤波后音频”。';
+
+  const f = Array.from({length: 256}, (_, i) => i * 200);
+  const ideal = f.map(v => {
+    if (typeEl.value === 'highpass') return v >= fc ? 1 : 0.08;
+    if (typeEl.value === 'bandpass') return (v >= fc*0.6 && v <= fc*1.4) ? 1 : 0.08;
+    if (typeEl.value === 'bandstop') return (v >= fc*0.6 && v <= fc*1.4) ? 0.05 : 1;
+    return v <= fc ? 1 : 0.08;
+  });
+  Plotly.react('af_wave', [{x:Array.from({length:ideal.length},(_,i)=>i), y:ideal, type:'scatter', mode:'lines', line:{color:'#2a5298', width:2}}], {title:'滤波器示意响应', xaxis:{title:'频率索引', gridcolor:'#eee'}, yaxis:{title:'幅值', gridcolor:'#eee', range:[0,1.1]}, height:260, margin:{t:40,b:40,l:50,r:20}, paper_bgcolor:'#fff', plot_bgcolor:'#fff'}, {responsive:true, displayModeBar:false});
+  Plotly.react('af_spec', [{x:f, y:ideal, type:'scatter', mode:'lines', line:{color:'#9b59b6', width:2}}], {title:'滤波前后频谱对比示意', xaxis:{title:'频率 / Hz', gridcolor:'#eee'}, yaxis:{title:'幅值', gridcolor:'#eee', range:[0,1.1]}, height:260, margin:{t:40,b:40,l:50,r:20}, paper_bgcolor:'#fff', plot_bgcolor:'#fff'}, {responsive:true, displayModeBar:false});
+
+  if (playBtn && playBtn.dataset.bound !== '1') {
+    playBtn.dataset.bound = '1';
+    playBtn.addEventListener('click', async () => {
+      if (!file) { statusEl.textContent = '请先选择一个音频文件。'; return; }
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioCtx();
+        const arrayBuf = await file.arrayBuffer();
+        const audioBuf = await ctx.decodeAudioData(arrayBuf.slice(0));
+        const offline = new OfflineAudioContext(audioBuf.numberOfChannels, audioBuf.length, audioBuf.sampleRate);
+        const src = offline.createBufferSource();
+        src.buffer = audioBuf;
+        const filter = offline.createBiquadFilter();
+        filter.type = typeEl.value;
+        filter.frequency.value = fc;
+        filter.Q.value = 0.707;
+        src.connect(filter);
+        filter.connect(offline.destination);
+        src.start();
+        const rendered = await offline.startRendering();
+        const playCtx = new AudioCtx();
+        const out = playCtx.createBufferSource();
+        out.buffer = rendered;
+        out.connect(playCtx.destination);
+        out.start();
+        statusEl.textContent = `正在播放滤波后音频：${file.name}。`;
+        out.onended = () => statusEl.textContent = `播放完成：${file.name}。`;
+      } catch (e) {
+        statusEl.textContent = '音频处理失败，请检查浏览器音频权限或文件格式。';
+      }
+    });
+  }
+  if (stopBtn && stopBtn.dataset.bound !== '1') {
+    stopBtn.dataset.bound = '1';
+    stopBtn.addEventListener('click', () => { statusEl.textContent = '已停止播放。'; });
+  }
+}
+const afFileEl = document.getElementById('af_file');
+const afTypeEl = document.getElementById('af_type');
+const afFcEl = document.getElementById('af_fc');
+if (afFileEl) afFileEl.addEventListener('change', renderAudioFilterPage);
+if (afTypeEl) afTypeEl.addEventListener('input', renderAudioFilterPage);
+if (afFcEl) afFcEl.addEventListener('input', renderAudioFilterPage);
+
 function renderLinearConv() {
   const x = parseSeq(document.getElementById('lc_x').value);
   const h = parseSeq(document.getElementById('lc_h').value);
@@ -1551,6 +2138,469 @@ function renderLinearConv() {
   }
 }
 ['lc_x','lc_h','lc_N','lc_P'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input', renderLinearConv); });
+
+/* ======================================================
+   第四章：线性相关计算
+   ====================================================== */
+function reverseSeq(y) {
+  return y.slice().reverse();
+}
+
+function linCorr(x, y) {
+  if (!x.length || !y.length) return { r: [], lags: [], yRev: [] };
+  const yRev = reverseSeq(y);
+  const r = linConv(x, yRev);
+  const lagStart = -(y.length - 1);
+  const lags = r.map((_, i) => lagStart + i);
+  return { r, lags, yRev };
+}
+
+function buildCorrFlipVisHTML(x, y, yRev) {
+  const chip = (v, n, color, border) =>
+    `<span class="chip" style="background:${color}18;border-color:${border}">${n}<br><b>${v}</b></span>`;
+  const xChips = x.map((v, i) => chip(v, `n=${i}`, '#2a5298', '#2a5298')).join('');
+  const yChips = y.map((v, i) => chip(v, `n=${i}`, '#27ae60', '#27ae60')).join('');
+  const yRevChips = yRev.map((v, i) => {
+    const origIdx = y.length - 1 - i;
+    return chip(v, `−n=${origIdx}`, '#e67e22', '#e67e22');
+  }).join('');
+  return `<div class="corr-flip-vis">
+    <div class="corr-flip-box"><div class="label">x(n)</div><div class="vals">${xChips}</div></div>
+    <div class="corr-flip-box"><div class="label">y(n)</div><div class="vals">${yChips}</div></div>
+    <div class="corr-flip-arrow">⟹ 翻转</div>
+    <div class="corr-flip-box"><div class="label">y(−n)</div><div class="vals">${yRevChips}</div></div>
+    <div class="corr-flip-arrow">⟹ 卷积</div>
+    <div class="corr-flip-box"><div class="label">r<sub>xy</sub>(m)</div><div class="vals" style="font-size:12px;color:#1e3c72;">x ∗ y(−n)</div></div>
+  </div>`;
+}
+
+function buildCorrAlignHTML(x, y, m) {
+  if (!x.length || !y.length) {
+    return '<div style="color:#888;text-align:center;">请输入有效的 x(n) 与 y(n)</div>';
+  }
+  const Lx = x.length, Ly = y.length;
+  const start = Math.min(0, m);
+  const end = Math.max(Lx - 1, m + Ly - 1);
+  const cols = [];
+  for (let n = start; n <= end; n++) cols.push(n);
+
+  let sum = 0;
+  const terms = [];
+  const xCells = cols.map(n => {
+    if (n >= 0 && n < Lx) return `<td>${x[n]}</td>`;
+    return '<td class="empty">—</td>';
+  }).join('');
+  const yCells = cols.map(n => {
+    const yIdx = n - m;
+    if (yIdx >= 0 && yIdx < Ly) return `<td>y(${yIdx})=${y[yIdx]}</td>`;
+    return '<td class="empty">—</td>';
+  }).join('');
+  const prodCells = cols.map(n => {
+    const yIdx = n - m;
+    if (n >= 0 && n < Lx && yIdx >= 0 && yIdx < Ly) {
+      const p = x[n] * y[yIdx];
+      sum += p;
+      terms.push(`x(${n})·y(${yIdx})=${x[n]}×${y[yIdx]}=${p}`);
+      return `<td class="overlap">${p}</td>`;
+    }
+    return '<td class="empty">—</td>';
+  }).join('');
+  const nHeader = cols.map(n => `<th>n=${n}</th>`).join('');
+
+  return `<div class="corr-align-wrap">
+    <div class="corr-align-title">滞后 m=${m}：r<sub>xy</sub>(${m}) = ${terms.length ? terms.join(' + ') : '0'} = <b>${sum}</b></div>
+    <table class="corr-align-table">
+      <thead><tr><th></th>${nHeader}</tr></thead>
+      <tbody>
+        <tr><td class="row-label">x(n)</td>${xCells}</tr>
+        <tr><td class="row-label">y(n−${m})</td>${yCells}</tr>
+        <tr><td class="row-label">x·y</td>${prodCells}</tr>
+        <tr class="sum-row"><td class="row-label">求和</td><td colspan="${cols.length}">r<sub>xy</sub>(${m}) = <b>${sum}</b></td></tr>
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function buildLinCorrVerticalArrayHTML(x, y) {
+  if (!x.length || !y.length) {
+    return '<div style="color:#888;text-align:center;">请输入有效的 x(n) 与 y(n)</div>';
+  }
+  const yRev = reverseSeq(y);
+  const { r, lags } = linCorr(x, y);
+  const inner = buildLinConvVerticalArrayHTML(x, yRev);
+  const lagRow = lags.map(m => `<th>m=${m}</th>`).join('');
+  const valRow = r.map(v => `<td><b>${v}</b></td>`).join('');
+  return `${inner}
+    <div style="margin-top:16px;text-align:center;">
+      <div style="font-weight:600;color:#2c3e50;margin-bottom:6px;">滞后 m 与相关值对照</div>
+      <table class="ola-step-table" style="max-width:100%;margin:0 auto;">
+        <thead><tr><th>滞后 m</th>${lagRow}</tr></thead>
+        <tbody><tr><td>r<sub>xy</sub>(m)</td>${valRow}</tr></tbody>
+      </table>
+    </div>`;
+}
+
+function corrAtLag(x, y, m) {
+  let sum = 0;
+  for (let n = 0; n < x.length; n++) {
+    const yIdx = n - m;
+    if (yIdx >= 0 && yIdx < y.length) sum += x[n] * y[yIdx];
+  }
+  return sum;
+}
+
+function renderLinearCorr() {
+  const root = document.getElementById('page12');
+  if (!document.getElementById('corr_x')) return;
+  const x = parseSeq(document.getElementById('corr_x').value);
+  const y = parseSeq(document.getElementById('corr_y').value);
+  const mSlider = document.getElementById('corr_m');
+  const { r, lags, yRev } = linCorr(x, y);
+
+  const mMin = y.length ? -(y.length - 1) : 0;
+  const mMax = x.length ? x.length - 1 : 0;
+  mSlider.min = mMin;
+  mSlider.max = mMax;
+  let m = +mSlider.value;
+  if (m < mMin || m > mMax) { m = 0; mSlider.value = 0; }
+  document.getElementById('corr_m_v').textContent = m;
+
+  const flipHost = document.getElementById('corr_flip_vis');
+  if (flipHost) flipHost.innerHTML = x.length && y.length ? buildCorrFlipVisHTML(x, y, yRev) : '';
+
+  const alignHost = document.getElementById('corr_align_vis');
+  if (alignHost) alignHost.innerHTML = buildCorrAlignHTML(x, y, m);
+
+  const vertHost = document.getElementById('corr_vertical_table');
+  if (vertHost) vertHost.innerHTML = buildLinCorrVerticalArrayHTML(x, y);
+
+  if (!root || !root.offsetParent) return;
+
+  document.getElementById('corr_slide_formula').innerHTML =
+    `当前 <strong>m = ${m}</strong>：将 y(n) 平移 ${m} 个单位（即对齐 y(n−${m})），与 x(n) 重叠处逐点相乘后求和。`;
+  document.getElementById('corr_status').textContent =
+    x.length && y.length
+      ? `x 长 ${x.length}，y 长 ${y.length}，相关长度 ${r.length}，m ∈ [${mMin}, ${mMax}]。`
+      : '请输入有效的 x(n) 与 y(n)。';
+
+  const directVal = corrAtLag(x, y, m);
+  const mIdx = lags.indexOf(m);
+  const fromTable = mIdx >= 0 ? r[mIdx] : null;
+  document.getElementById('corr_verify').innerHTML = fromTable != null && directVal === fromTable
+    ? `<b>验证通过：</b>滑动对齐求和 r<sub>xy</sub>(${m}) = ${directVal}，与竖式法/卷积法结果一致。`
+    : x.length && y.length
+      ? `<b>验证失败</b>（请检查实现）。`
+      : '请输入有效序列以验证计算。';
+
+  const nsX = x.map((_, i) => i);
+  const nsY = y.map((_, i) => i);
+  const nsYRev = yRev.map((_, i) => -(y.length - 1 - i));
+  stemPlot('corr_plot_x', nsX, x.length ? x : [0], `x(n)，长度 ${x.length || 0}`, '#2a5298');
+  stemPlot('corr_plot_y', nsY, y.length ? y : [0], `y(n)，长度 ${y.length || 0}`, '#27ae60');
+  stemPlot('corr_plot_yrev', nsYRev, yRev.length ? yRev : [0], `翻转序列 y(−n)（用于卷积法）`, '#e67e22');
+
+  const stemCorr = [];
+  r.forEach((v, i) => {
+    stemCorr.push({ x: [lags[i], lags[i]], y: [0, v], type: 'scatter', mode: 'lines', line: { color: '#9b59b6', width: 2 }, showlegend: false, hoverinfo: 'skip' });
+  });
+  stemCorr.push({
+    x: lags, y: r, type: 'scatter', mode: 'lines+markers', name: 'r_xy(m)',
+    line: { color: '#9b59b6', width: 2 }, marker: { size: 8, color: '#9b59b6' }
+  });
+  if (mIdx >= 0) {
+    stemCorr.push({
+      x: [lags[mIdx]], y: [r[mIdx]], type: 'scatter', mode: 'markers', name: `当前 m=${m}`,
+      marker: { size: 14, color: '#c0392b', symbol: 'diamond' }
+    });
+  }
+  Plotly.react('corr_plot_result', stemCorr, {
+    title: '线性互相关 r_xy(m)（菱形 = 当前滞后 m）',
+    xaxis: { title: '滞后 m', dtick: 1, gridcolor: '#eee' },
+    yaxis: { title: 'r_xy(m)', gridcolor: '#eee' },
+    height: 300, margin: { t: 40, b: 45, l: 55, r: 20 },
+    plot_bgcolor: '#fafbfd', paper_bgcolor: '#fff', legend: { orientation: 'h', y: 1.14 }
+  }, { responsive: true, displayModeBar: false });
+
+  setTimeout(() => {
+    ['corr_plot_x','corr_plot_y','corr_plot_yrev','corr_plot_result'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && window.Plotly) Plotly.Plots.resize(el);
+    });
+  }, 80);
+}
+['corr_x','corr_y','corr_m'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', renderLinearCorr);
+});
+
+/* ======================================================
+   第四章：重叠相加法与重叠保留法
+   ====================================================== */
+const OLA_EXAMPLE = {
+  x: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+  h: [1, 1, 1],
+  B: 4,
+  get M() { return this.h.length; },
+  get L() { return this.B + this.M - 1; }
+};
+const OLA_BLOCK_COLORS = ['#2a5298', '#e67e22', '#27ae60', '#9b59b6', '#16a085'];
+let olaCurrentBlock = 0;
+
+function buildBlockNav(numBlocks, current, method) {
+  let html = '';
+  for (let i = 0; i < numBlocks; i++) {
+    html += `<button type="button" class="${i === current ? 'active' : ''}" data-block="${i}">段 ${i + 1}</button>`;
+  }
+  return html;
+}
+
+function buildSegBarOLA(blockIdx) {
+  const { x, B } = OLA_EXAMPLE;
+  const numBlocks = Math.ceil(x.length / B);
+  let cells = '';
+  for (let i = 0; i < x.length; i++) {
+    const bi = Math.floor(i / B);
+    const isCurrent = bi === blockIdx;
+    const bg = OLA_BLOCK_COLORS[bi % OLA_BLOCK_COLORS.length];
+    cells += `<div class="ola-seg-cell${isCurrent ? ' current' : ''}" style="background:${bg}18;border-color:${isCurrent ? '#c0392b' : bg}55;color:#222;">
+      <span class="idx">n=${i}</span><span class="val">${x[i]}</span></div>`;
+  }
+  let legend = OLA_BLOCK_COLORS.slice(0, numBlocks).map((c, i) =>
+    `<span><i style="background:${c}"></i>段 ${i + 1}：n=${i * B}～${Math.min((i + 1) * B - 1, x.length - 1)}</span>`
+  ).join('');
+  return `<div class="ola-seg-wrap"><div class="ola-seg-title">x(n) 分段示意（重叠相加：段间不重叠）</div>
+    <div class="ola-seg-bar">${cells}</div>
+    <div class="ola-seg-legend">${legend}<span><i style="background:#c0392b;border:2px solid #c0392b"></i>红框 = 当前段</span></div></div>`;
+}
+
+function buildSegBarOLS(step, blockIdx) {
+  const { x, L, M } = OLA_EXAMPLE;
+  const hop = L - M + 1;
+  const { start, segment } = step;
+  let cells = '';
+  for (let i = 0; i < x.length; i++) {
+    const inWindow = i >= start && i < start + L;
+    const localIdx = i - start;
+    const isOverlap = inWindow && localIdx < M - 1 && i >= 0;
+    const isNew = inWindow && localIdx >= M - 1 && i < x.length;
+    const isCurrent = inWindow;
+    let cls = 'ola-seg-cell';
+    if (blockIdx === step.b && isCurrent) cls += ' current';
+    if (blockIdx === step.b && isOverlap && i >= 0) cls += ' overlap';
+    const bg = isCurrent ? OLA_BLOCK_COLORS[step.b % OLA_BLOCK_COLORS.length] : '#eef2f7';
+    cells += `<div class="${cls}" style="background:${isCurrent ? bg + '22' : bg};color:#222;">
+      <span class="idx">n=${i}</span><span class="val">${x[i]}</span></div>`;
+  }
+  const overlapIdx = [];
+  for (let i = 0; i < L; i++) {
+    const idx = start + i;
+    if (idx >= 0 && idx < x.length && i < M - 1) overlapIdx.push(idx);
+  }
+  return `<div class="ola-seg-wrap"><div class="ola-seg-title">x(n) 分段示意（重叠保留：段长 L=${L}，重叠 M−1=${M - 1} 点）</div>
+    <div class="ola-seg-bar">${cells}</div>
+    <div class="ola-seg-legend">
+      <span><i style="background:${OLA_BLOCK_COLORS[step.b % OLA_BLOCK_COLORS.length]}"></i>当前段窗口 [${fmtArr(segment)}]</span>
+      <span>重叠样本：${overlapIdx.length ? overlapIdx.map(n => `n=${n}`).join('、') : '无（首段补零）'}</span>
+      <span>新输入：每段 ${hop} 点</span>
+    </div></div>`;
+}
+
+function computeOverlapAdd() {
+  const { x, h, B, M, L } = OLA_EXAMPLE;
+  const yRef = linConv(x, h);
+  const numBlocks = Math.ceil(x.length / B);
+  const yAcc = Array(yRef.length).fill(0);
+  const steps = [];
+  for (let b = 0; b < numBlocks; b++) {
+    const start = b * B;
+    const xBlock = x.slice(start, start + B);
+    const padded = [...xBlock, ...Array(L - xBlock.length).fill(0)];
+    const yBlock = linConv(padded, h);
+    steps.push({ b, start, xBlock, padded, yBlock });
+    for (let i = 0; i < yBlock.length; i++) {
+      if (start + i < yAcc.length) yAcc[start + i] += yBlock[i];
+    }
+  }
+  return { yRef, yAcc, steps, numBlocks };
+}
+
+function computeOverlapSave() {
+  const { x, h, M, L } = OLA_EXAMPLE;
+  const B = L - M + 1;
+  const hop = B;
+  const yRef = linConv(x, h);
+  const yOut = [];
+  const steps = [];
+  let b = 0;
+  while (yOut.length < yRef.length && b < 10) {
+    const start = b * hop - (M - 1);
+    const segment = Array(L).fill(0).map((_, i) => {
+      const idx = start + i;
+      return idx >= 0 && idx < x.length ? x[idx] : 0;
+    });
+    const yFull = linConv(segment, h);
+    const valid = yFull.slice(M - 1, M - 1 + hop);
+    steps.push({ b, start, segment, yFull, valid, outStart: b * hop });
+    for (let i = 0; i < valid.length && yOut.length < yRef.length; i++) yOut.push(valid[i]);
+    b++;
+  }
+  return { yRef, yOut, steps, numBlocks: steps.length, hop, B };
+}
+
+function fmtArr(arr) {
+  return arr.map(v => Number.isInteger(v) ? v : +v.toFixed(2)).join(', ');
+}
+
+function buildOLAStepHTML(step, blockIdx) {
+  const { b, start, xBlock, padded, yBlock } = step;
+  const overlapStart = start + OLA_EXAMPLE.M - 1;
+  const overlapEnd = start + OLA_EXAMPLE.L - 2;
+  let yRow = yBlock.map((v, i) => {
+    const cls = i >= OLA_EXAMPLE.B ? 'ola-highlight' : '';
+    return `<td class="${cls}">${v}</td>`;
+  }).join('');
+  const overlapNote = b > 0
+    ? `与第 ${b} 段在 y(${overlapStart})～y(${Math.min(overlapEnd, overlapStart + OLA_EXAMPLE.M - 2)}) 处重叠，对应位置<strong>相加</strong>。`
+    : '首段无重叠相加。';
+  return `<div class="ola-step-card">
+    <h3>第 ${b + 1} / ${Math.ceil(OLA_EXAMPLE.x.length / OLA_EXAMPLE.B)} 段 · 重叠相加</h3>
+    <table class="ola-step-table">
+      <thead><tr><th>步骤</th><th colspan="${OLA_EXAMPLE.L}">内容</th></tr></thead>
+      <tbody>
+        <tr><td>① 取输入段</td><td colspan="${OLA_EXAMPLE.L}">x(${start})～x(${start + xBlock.length - 1}) = [${fmtArr(xBlock)}]</td></tr>
+        <tr><td>② 补零至 L</td><td colspan="${OLA_EXAMPLE.L}">[${fmtArr(padded)}]</td></tr>
+        <tr><td>③ L 点卷积</td>${yRow}</tr>
+        <tr><td>④ 写入 y(n)</td>${yBlock.map((_, i) => `<td>y(${start + i})</td>`).join('')}</tr>
+      </tbody>
+    </table>
+    <div class="note">${overlapNote}</div></div>`;
+}
+
+function buildOLAAccHTML(steps, yAcc, highlightBlock) {
+  const len = yAcc.length;
+  let header = Array.from({ length: len }, (_, i) => `<th>y(${i})</th>`).join('');
+  let rows = steps.map((step, bi) => {
+    const isCur = bi === highlightBlock;
+    const rowStyle = isCur ? '' : 'opacity:0.55';
+    const cells = Array(len).fill(0).map((_, i) => {
+      const local = i - step.start;
+      const val = local >= 0 && local < step.yBlock.length ? step.yBlock[local] : '';
+      const cls = isCur ? 'ola-highlight' : '';
+      return `<td class="${cls}">${val === '' ? '' : val}</td>`;
+    }).join('');
+    return `<tr style="${rowStyle}"><td>${isCur ? '▶ ' : ''}段 ${bi + 1}</td>${cells}</tr>`;
+  }).join('');
+  const sumRow = Array.from({ length: len }, (_, i) => `<td class="ola-acc"><b>${yAcc[i]}</b></td>`).join('');
+  return `<table class="ola-step-table"><thead><tr><th>累加过程</th>${header}</tr></thead><tbody>${rows}<tr><td><b>相加结果</b></td>${sumRow}</tr></tbody></table>`;
+}
+
+function buildOLSStepHTML(step) {
+  const { b, start, segment, yFull, valid, outStart } = step;
+  const { M, L } = OLA_EXAMPLE;
+  const yCells = yFull.map((v, i) => {
+    let cls = '';
+    if (i < M - 1) cls = 'ola-discard';
+    else if (i < M - 1 + valid.length) cls = 'ola-highlight';
+    return `<td class="${cls}">${v}</td>`;
+  }).join('');
+  const newSamples = [];
+  for (let i = 0; i < L; i++) {
+    const idx = start + i;
+    if (idx >= 0 && idx < OLA_EXAMPLE.x.length && i >= M - 1) newSamples.push(`x(${idx})=${OLA_EXAMPLE.x[idx]}`);
+  }
+  return `<div class="ola-step-card">
+    <h3>第 ${b + 1} 段 · 重叠保留</h3>
+    <table class="ola-step-table">
+      <thead><tr><th>步骤</th><th colspan="${L}">内容</th></tr></thead>
+      <tbody>
+        <tr><td>① 取 L 点窗口</td><td colspan="${L}">起始 n=${start} → [${fmtArr(segment)}]</td></tr>
+        <tr><td>② 重叠说明</td><td colspan="${L}">前 ${M - 1} 点为与上段重叠；本段新输入：${newSamples.join('，') || '—'}</td></tr>
+        <tr><td>③ L 点卷积</td>${yCells}</tr>
+        <tr><td>④ 保留输出</td><td colspan="${L}">舍前 ${M - 1} 点，取 [${fmtArr(valid)}] → y(${outStart})～y(${outStart + valid.length - 1})</td></tr>
+      </tbody>
+    </table></div>`;
+}
+
+function buildOLSFullHTML(steps, yOut, highlightBlock) {
+  const rows = steps.map((step, bi) => {
+    const isCur = bi === highlightBlock;
+    const cls = isCur ? 'ola-highlight' : '';
+    const rowStyle = isCur ? 'font-weight:600' : 'opacity:0.55';
+    return `<tr style="${rowStyle}"><td>${isCur ? '▶ ' : ''}段 ${bi + 1}</td><td class="${cls}">y(${step.outStart})～y(${step.outStart + step.valid.length - 1})</td><td class="${cls}">[${fmtArr(step.valid)}]</td></tr>`;
+  }).join('');
+  return `<table class="ola-step-table"><thead><tr><th>段号</th><th>输出位置</th><th>有效输出</th></tr></thead><tbody>${rows}<tr><td><b>拼接结果</b></td><td colspan="2" class="ola-acc"><b>[${fmtArr(yOut)}]</b></td></tr></tbody></table>`;
+}
+
+function renderOLAPage() {
+  if (!document.getElementById('ola_compare')) return;
+  const method = document.getElementById('ola_method').value;
+  const olaData = computeOverlapAdd();
+  const olsData = computeOverlapSave();
+  const numBlocks = method === 'ola' ? olaData.numBlocks : olsData.numBlocks;
+  if (olaCurrentBlock >= numBlocks) olaCurrentBlock = 0;
+  const blockIdx = olaCurrentBlock;
+
+  const navHost = document.getElementById('ola_block_nav');
+  if (navHost) {
+    navHost.innerHTML = buildBlockNav(numBlocks, blockIdx, method);
+    navHost.querySelectorAll('button').forEach(btn => {
+      btn.onclick = () => {
+        olaCurrentBlock = +btn.dataset.block;
+        renderOLAPage();
+      };
+    });
+  }
+
+  const yRef = olaData.yRef;
+  const yMethod = method === 'ola' ? olaData.yAcc : olsData.yOut;
+  const match = yRef.every((v, i) => v === yMethod[i]);
+
+  document.getElementById('ola_ref_formula').textContent = `y(n) = [${fmtArr(yRef)}]（长度 ${yRef.length}）`;
+  document.getElementById('ola_ref_table').innerHTML = `<table class="ola-step-table"><thead><tr><th>n</th>${yRef.map((_, i) => `<th>${i}</th>`).join('')}</thead><tbody><tr><td>y(n)</td>${yRef.map(v => `<td><b>${v}</b></td>`).join('')}</tr></tbody></table>`;
+  document.getElementById('ola_verify').innerHTML = match
+    ? `<b>验证通过：</b>${method === 'ola' ? '重叠相加法' : '重叠保留法'}结果与线性卷积完全一致。`
+    : `<b>验证失败</b>（请检查实现）。`;
+
+  const segVis = document.getElementById('ola_seg_vis');
+  if (method === 'ola') {
+    segVis.innerHTML = buildSegBarOLA(blockIdx);
+    document.getElementById('ola_title').textContent = '重叠相加法（Overlap-Add）';
+    document.getElementById('ola_formula').innerHTML = `x(n) 按 B=${OLA_EXAMPLE.B} 分为 <strong>${olaData.numBlocks} 段</strong>（不重叠），每段补零至 L=${OLA_EXAMPLE.L} 后卷积，重叠 ${OLA_EXAMPLE.M - 1} 点<strong>相加</strong>。`;
+    document.getElementById('ola_step_detail').innerHTML = buildOLAStepHTML(olaData.steps[blockIdx], blockIdx);
+    document.getElementById('ola_acc_table').innerHTML = '<h3 style="font-size:15px;color:#2a5298;margin:14px 0 8px;">各段叠加过程（▶ 为当前段）</h3>' + buildOLAAccHTML(olaData.steps, olaData.yAcc, blockIdx);
+    document.getElementById('ola_status').textContent = `重叠相加 · 共 ${olaData.numBlocks} 段 · 当前第 ${blockIdx + 1} 段：x(${olaData.steps[blockIdx].start})～x(${olaData.steps[blockIdx].start + olaData.steps[blockIdx].xBlock.length - 1})`;
+  } else {
+    segVis.innerHTML = buildSegBarOLS(olsData.steps[blockIdx], blockIdx);
+    document.getElementById('ola_title').textContent = '重叠保留法（Overlap-Save）';
+    document.getElementById('ola_formula').innerHTML = `共 <strong>${olsData.numBlocks} 段</strong>，每段 L=${OLA_EXAMPLE.L} 点、重叠 M−1=${OLA_EXAMPLE.M - 1} 点，舍前 ${OLA_EXAMPLE.M - 1} 点输出后拼接。`;
+    document.getElementById('ola_step_detail').innerHTML = buildOLSStepHTML(olsData.steps[blockIdx]);
+    document.getElementById('ola_acc_table').innerHTML = '<h3 style="font-size:15px;color:#2a5298;margin:14px 0 8px;">各段拼接过程（▶ 为当前段）</h3>' + buildOLSFullHTML(olsData.steps, olsData.yOut, blockIdx);
+    document.getElementById('ola_status').textContent = `重叠保留 · 共 ${olsData.numBlocks} 段 · 当前第 ${blockIdx + 1} 段：窗口起始于 n=${olsData.steps[blockIdx].start}`;
+  }
+
+  const nAxis = yRef.map((_, i) => i);
+  const blockStart = method === 'ola' ? olaData.steps[blockIdx].start : olsData.steps[blockIdx].outStart;
+  const blockLen = method === 'ola' ? OLA_EXAMPLE.L : olsData.steps[blockIdx].valid.length;
+  const highlightX = Array.from({ length: blockLen }, (_, i) => blockStart + i).filter(n => n < yRef.length);
+  const highlightY = highlightX.map(n => yMethod[n]);
+
+  Plotly.react('ola_compare', [
+    { x: nAxis, y: yRef, type: 'scatter', mode: 'lines+markers', name: '线性卷积（标准）', line: { color: '#2a5298', width: 2 }, marker: { size: 7 } },
+    { x: nAxis, y: yMethod, type: 'scatter', mode: 'markers', name: method === 'ola' ? '重叠相加法' : '重叠保留法', marker: { symbol: 'circle-open', size: 9, color: '#e67e22', line: { width: 2 } } },
+    { x: highlightX, y: highlightY, type: 'scatter', mode: 'markers', name: `当前段贡献`, marker: { size: 12, color: '#c0392b', symbol: 'diamond' } }
+  ], {
+    title: '分块卷积结果与线性卷积对照（菱形 = 当前段对应输出）',
+    xaxis: { title: 'n', dtick: 1, gridcolor: '#eee' },
+    yaxis: { title: 'y(n)', gridcolor: '#eee' },
+    height: 300, margin: { t: 40, b: 45, l: 55, r: 20 },
+    plot_bgcolor: '#fafbfd', paper_bgcolor: '#fff', legend: { orientation: 'h', y: 1.14 }
+  }, { responsive: true, displayModeBar: false });
+}
+
+document.getElementById('ola_method')?.addEventListener('change', () => {
+  olaCurrentBlock = 0;
+  renderOLAPage();
+});
 
 /* ======================================================
    第三页：频域采样与重构 (修正比例：统一协调高度)
@@ -1736,6 +2786,50 @@ if (fftInputEl) fftInputEl.addEventListener('input', () => { stopFFTAnimation();
 if (fftPlayBtn) fftPlayBtn.addEventListener('click', startFFTAnimation);
 if (fftStopBtn) fftStopBtn.addEventListener('click', stopFFTAnimation);
 
+const difStepEl = document.getElementById('dif_step');
+const difInputEl = document.getElementById('dif_x');
+if (difStepEl || difInputEl) {
+  const renderDIFPage = () => {
+    const x = parseSeq((difInputEl && difInputEl.value) || '1,2,3,4,5,6,7,8');
+    const stage = +(difStepEl ? difStepEl.value : 0);
+    const stages = [
+      { title: 'DIF-FFT 蝶形图总览', desc: '从输出端开始分解，先做蝶形，再递归到更小规模。' },
+      { title: '第 1 级：8 点蝶形', desc: '8 点序列先分成上下两支，形成 4 组蝶形连接。' },
+      { title: '第 2 级：4 点蝶形', desc: '继续对子序列做 4 点蝶形分解。' },
+      { title: '第 3 级：2 点蝶形', desc: '最小子问题直接完成，得到频域结果。' }
+    ];
+    Plotly.react('dif_flow', [{
+      x: [0,0,1,1,2,2,3,3],
+      y: [0,1,0,1,0,1,0,1],
+      type: 'scatter', mode: 'lines',
+      line: { color: '#cbd5e1', width: 2 }, hoverinfo: 'skip', showlegend: false
+    }], {
+      title: 'DIF-FFT 蝶形结构图',
+      xaxis: { visible: false, range: [-0.4, 3.4] },
+      yaxis: { visible: false, range: [-0.3, 1.3] },
+      height: 320, margin: { t: 40, b: 20, l: 20, r: 20 }, paper_bgcolor: '#fff', plot_bgcolor: '#fff',
+      shapes: [
+        {type:'line', x0:0, y0:1, x1:1, y1:0, line:{color:'#2a5298', width:3}},
+        {type:'line', x0:0, y0:0, x1:1, y1:1, line:{color:'#2a5298', width:3}},
+        {type:'line', x0:1, y0:1, x1:2, y1:0, line:{color:'#27ae60', width:3}},
+        {type:'line', x0:1, y0:0, x1:2, y1:1, line:{color:'#27ae60', width:3}},
+        {type:'line', x0:2, y0:1, x1:3, y1:0, line:{color:'#e67e22', width:3}},
+        {type:'line', x0:2, y0:0, x1:3, y1:1, line:{color:'#e67e22', width:3}}
+      ],
+      annotations: [
+        {x:0,y:1,text:'x0',showarrow:false,font:{size:14,color:'#111'}},{x:0,y:0,text:'x1',showarrow:false,font:{size:14,color:'#111'}},
+        {x:1,y:1,text:'蝶形 1',showarrow:false,font:{size:14,color:'#111'}},{x:1,y:0,text:'蝶形 2',showarrow:false,font:{size:14,color:'#111'}},
+        {x:2,y:1,text:'蝶形 3',showarrow:false,font:{size:14,color:'#111'}},{x:2,y:0,text:'蝶形 4',showarrow:false,font:{size:14,color:'#111'}},
+        {x:3,y:1,text:'X(k)',showarrow:false,font:{size:14,color:'#111'}},{x:3,y:0,text:'X(k)',showarrow:false,font:{size:14,color:'#111'}}
+      ]
+    }, { responsive: true, displayModeBar: false });
+    Plotly.react('dif_stage', [{x: Array.from({length: Math.min(8, x.length)}, (_, i) => i), y: x.slice(0,8), type:'scatter', mode:'lines+markers', line:{color:'#9b59b6'}, marker:{size:8}}], {title: stages[Math.min(stage,3)].title + ' · ' + stages[Math.min(stage,3)].desc, xaxis:{title:'n', dtick:1, gridcolor:'#eee'}, yaxis:{title:'幅值', gridcolor:'#eee'}, height:260, margin:{t:45,b:40,l:50,r:20}, paper_bgcolor:'#fff', plot_bgcolor:'#fff'}, {responsive:true, displayModeBar:false});
+    document.getElementById('dif_status').textContent = `当前级数 ${stage}：${stages[Math.min(stage,3)].desc}`;
+  };
+  if (difStepEl) difStepEl.addEventListener('input', renderDIFPage);
+  if (difInputEl) difInputEl.addEventListener('input', renderDIFPage);
+  window.renderDIFPage = renderDIFPage;
+}
 /* ======================================================
    第四页：语音采样与奈奎斯特验证
    ====================================================== */
@@ -2529,6 +3623,20 @@ function renderFFT() {
   document.getElementById('fft_status').textContent = statusTexts[stage] + animHint;
 }
 
+function dftComplex(seq) {
+  const N = seq.length;
+  const re = Array(N).fill(0), im = Array(N).fill(0);
+  for (let k = 0; k < N; k++) {
+    for (let n = 0; n < N; n++) {
+      const ang = -2 * Math.PI * k * n / N;
+      re[k] += seq[n] * Math.cos(ang);
+      im[k] += seq[n] * Math.sin(ang);
+    }
+  }
+  return { re, im };
+}
+function magSpectrum(c) { return c.re.map((v, i) => Math.hypot(v, c.im[i])); }
+function nextPow2(n) { let p = 1; while (p < n) p <<= 1; return p; }
 function stageToFlowPhase(stage) {
   return 0.07 + (Math.min(stage, 3) / 4) * 0.93 + 0.01;
 }
@@ -2694,6 +3802,150 @@ function renderFIRPage() {
 ['fir_N','fir_window_select'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input', renderFIRPage); });
 const firRefreshBtn = document.getElementById('fir_refresh'); if (firRefreshBtn) firRefreshBtn.addEventListener('click', renderFIRPage);
 
+/* ======================================================
+   第二章：Z 变换
+   ====================================================== */
+function solveQuadraticPoles(a1, a2) {
+  const disc = a1 * a1 + 4 * a2;
+  if (disc >= 0) {
+    const s = Math.sqrt(disc);
+    return [{ re: (a1 + s) / 2, im: 0 }, { re: (a1 - s) / 2, im: 0 }];
+  }
+  const re = a1 / 2, im = Math.sqrt(-disc) / 2;
+  return [{ re, im }, { re, im: -im }];
+}
+
+function nthRootsOnUnitCircle(N, excludeK0) {
+  const zeros = [];
+  for (let k = 0; k < N; k++) {
+    if (excludeK0 && k === 0) continue;
+    const ang = 2 * Math.PI * k / N;
+    zeros.push({ re: Math.cos(ang), im: Math.sin(ang) });
+  }
+  return zeros;
+}
+
+function buildZTModel() {
+  const type = document.getElementById('zt_type').value;
+  const a = +document.getElementById('zt_a').value;
+  const N = +document.getElementById('zt_N').value;
+  const a1 = +document.getElementById('zt_a1').value;
+  const a2 = +document.getElementById('zt_a2').value;
+  let formula = '', roc = '', pz = '', zeros = [], poles = [], rocRadius = 0, isStable = true;
+
+  if (type === 'impulse') {
+    formula = 'X(z) = 1';
+    roc = '全平面（除 z=0 或 z=∞ 的单点情形）';
+    pz = '无有限零极点';
+    zeros = []; poles = []; rocRadius = 0;
+  } else if (type === 'step') {
+    formula = 'X(z) = z / (z − 1)';
+    roc = '|z| > 1';
+    pz = '极点 z=1，零点 z=0';
+    zeros = [{ re: 0, im: 0 }]; poles = [{ re: 1, im: 0 }]; rocRadius = 1;
+    isStable = false;
+  } else if (type === 'exp') {
+    formula = `X(z) = z / (z − ${a.toFixed(2)})`;
+    roc = `|z| > ${Math.abs(a).toFixed(2)}`;
+    pz = `极点 z=${a.toFixed(2)}，零点 z=0`;
+    zeros = [{ re: 0, im: 0 }]; poles = [{ re: a, im: 0 }]; rocRadius = Math.abs(a);
+    isStable = Math.abs(a) < 1;
+  } else if (type === 'rect') {
+    formula = `X(z) = (1 − z^${-N}) / (1 − z^−1)`;
+    roc = '|z| > 0';
+    pz = `极点 z=1，零点为 N 次单位根（除 z=1）`;
+    zeros = nthRootsOnUnitCircle(N, true);
+    poles = [{ re: 1, im: 0 }]; rocRadius = 0;
+    isStable = false;
+  } else if (type === 'iir1') {
+    formula = `H(z) = 1 / (1 − ${a.toFixed(2)}z^−1) = z / (z − ${a.toFixed(2)})`;
+    roc = `|z| > ${Math.abs(a).toFixed(2)}`;
+    pz = `极点 z=${a.toFixed(2)}，零点 z=0`;
+    zeros = [{ re: 0, im: 0 }]; poles = [{ re: a, im: 0 }]; rocRadius = Math.abs(a);
+    isStable = Math.abs(a) < 1;
+  } else {
+    const polesQ = solveQuadraticPoles(a1, a2);
+    formula = `H(z) = 1 / (1 − ${a1.toFixed(2)}z^−1 − ${a2.toFixed(2)}z^−2)`;
+    roc = '极点模最大者的外部区域';
+    pz = `极点 z₁=${polesQ[0].re.toFixed(2)}${polesQ[0].im ? (polesQ[0].im >= 0 ? '+' : '') + polesQ[0].im.toFixed(2) + 'j' : ''}，z₂=${polesQ[1].re.toFixed(2)}${polesQ[1].im ? (polesQ[1].im >= 0 ? '+' : '') + polesQ[1].im.toFixed(2) + 'j' : ''}`;
+    zeros = []; poles = polesQ;
+    rocRadius = Math.max(...poles.map(p => Math.hypot(p.re, p.im)));
+    isStable = poles.every(p => Math.hypot(p.re, p.im) < 1);
+  }
+  return { type, formula, roc, pz, zeros, poles, rocRadius, isStable };
+}
+
+function updateZTControls() {
+  const type = document.getElementById('zt_type').value;
+  document.getElementById('zt_ctrl_a').style.display = (type === 'exp' || type === 'iir1') ? '' : 'none';
+  document.getElementById('zt_ctrl_N').style.display = type === 'rect' ? '' : 'none';
+  document.getElementById('zt_ctrl_a1').style.display = type === 'iir2' ? '' : 'none';
+  document.getElementById('zt_ctrl_a2').style.display = type === 'iir2' ? '' : 'none';
+}
+
+function renderZTPage() {
+  const el = id => document.getElementById(id);
+  if (!el('zt_plane')) return;
+  updateZTControls();
+  ['zt_a','zt_N','zt_a1','zt_a2'].forEach(id => {
+    const node = el(id);
+    const valNode = el(id + '_v');
+    if (node && valNode) valNode.textContent = node.value;
+  });
+
+  const model = buildZTModel();
+  el('zt_formula').textContent = model.formula;
+  el('zt_roc').textContent = model.roc;
+  el('zt_pz').textContent = model.pz;
+  el('zt_status').textContent = model.isStable
+    ? '系统 BIBO 稳定：所有极点均在单位圆内。'
+    : '注意：存在极点在单位圆上或圆外，对应序列可能不稳定或需指定不同 ROC。';
+
+  const theta = Array.from({ length: 200 }, (_, i) => 2 * Math.PI * i / 199);
+  const unitX = theta.map(t => Math.cos(t));
+  const unitY = theta.map(t => Math.sin(t));
+  const planeTraces = [
+    { x: unitX, y: unitY, type: 'scatter', mode: 'lines', line: { color: '#888', width: 1.5, dash: 'dot' }, name: '单位圆 |z|=1', hoverinfo: 'skip' },
+    { x: [0], y: [0], type: 'scatter', mode: 'markers', marker: { size: 6, color: '#aaa' }, name: '原点', hoverinfo: 'skip' }
+  ];
+  if (model.zeros.length) {
+    planeTraces.push({
+      x: model.zeros.map(z => z.re), y: model.zeros.map(z => z.im),
+      type: 'scatter', mode: 'markers',
+      marker: { symbol: 'circle-open', size: 14, color: '#27ae60', line: { width: 3 } },
+      name: '零点', text: model.zeros.map((z, i) => `零点 ${i + 1}<br>z=${z.re.toFixed(3)}${z.im ? (z.im >= 0 ? '+' : '') + z.im.toFixed(3) + 'j' : ''}`),
+      hoverinfo: 'text'
+    });
+  }
+  if (model.poles.length) {
+    planeTraces.push({
+      x: model.poles.map(p => p.re), y: model.poles.map(p => p.im),
+      type: 'scatter', mode: 'markers',
+      marker: { symbol: 'x', size: 14, color: '#c0392b', line: { width: 3 } },
+      name: '极点', text: model.poles.map((p, i) => `极点 ${i + 1}<br>z=${p.re.toFixed(3)}${p.im ? (p.im >= 0 ? '+' : '') + p.im.toFixed(3) + 'j' : ''}`),
+      hoverinfo: 'text'
+    });
+  }
+  const maxR = Math.max(1.5, model.rocRadius + 0.5, ...model.poles.map(p => Math.hypot(p.re, p.im) + 0.3), ...model.zeros.map(z => Math.hypot(z.re, z.im) + 0.3));
+  Plotly.react('zt_plane', planeTraces, {
+    title: 'Z 平面零极点分布',
+    xaxis: { title: 'Re{z}', scaleanchor: 'y', scaleratio: 1, range: [-maxR, maxR], zeroline: true, gridcolor: '#eee' },
+    yaxis: { title: 'Im{z}', range: [-maxR, maxR], zeroline: true, gridcolor: '#eee' },
+    height: 420, margin: { t: 40, b: 45, l: 55, r: 20 },
+    plot_bgcolor: '#fafbfd', paper_bgcolor: '#fff', showlegend: true,
+    legend: { orientation: 'h', y: 1.08 }
+  }, { responsive: true, displayModeBar: false });
+
+  if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise();
+}
+
+const ztTypeEl = document.getElementById('zt_type');
+if (ztTypeEl) ztTypeEl.addEventListener('change', renderZTPage);
+['zt_a','zt_N','zt_a1','zt_a2'].forEach(id => {
+  const node = document.getElementById(id);
+  if (node) node.addEventListener('input', renderZTPage);
+});
+
 function stopFFTAnimation() {
   if (fftAnimRaf) cancelAnimationFrame(fftAnimRaf);
   fftAnimRaf = null;
@@ -2722,9 +3974,18 @@ renderCV();
 renderFS();
 renderDistortion();
 renderLinearConv();
+requestAnimationFrame(() => {
+  renderLinearCorr();
+  setTimeout(renderLinearCorr, 80);
+});
+renderAudioFilterPage();
+renderOLAPage();
 renderFFT();
+if (window.renderDIFPage) window.renderDIFPage();
 renderIIRPage();
 renderFIRPage();
+renderZTPage();
+renderAudioFilterPage();
 bindAudioUI();
 
 </script>
