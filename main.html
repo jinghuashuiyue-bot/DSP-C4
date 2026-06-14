@@ -1164,49 +1164,40 @@
   <div class="page-layout-two">
     <aside class="sidebar">
       <div class="panel">
-        <h2>音频选择</h2>
-        <div class="formula">选择本地音频，经过滤波器后再播放。</div>
+        <h2>参数调节</h2>
+        <div class="formula">输入 x(n)、h(n)，用竖式法比较线性卷积与 N 点圆周卷积。</div>
         <div class="controls">
           <div class="ctrl">
-            <label>选择音频文件</label>
-            <input type="file" id="af_file" accept="audio/*">
+            <label>序列 x(n)（逗号分隔）</label>
+            <input type="text" id="lc_x" value="1,2,3,4">
           </div>
           <div class="ctrl">
-            <label>滤波器类型</label>
-            <select id="af_type">
-              <option value="lowpass">低通滤波器</option>
-              <option value="highpass">高通滤波器</option>
-              <option value="bandpass">带通滤波器</option>
-              <option value="bandstop">带阻滤波器</option>
-            </select>
+            <label>序列 h(n)（逗号分隔）</label>
+            <input type="text" id="lc_h" value="1,1,1">
           </div>
           <div class="ctrl">
-            <label>截止频率 / Hz <span class="val" id="af_fc_v">3000</span></label>
-            <input type="range" id="af_fc" min="200" max="10000" step="100" value="3000">
-          </div>
-          <div class="ctrl">
-            <button id="af_play" class="audio-btn" style="width:100%; margin-top:6px;">播放滤波后音频</button>
-          </div>
-          <div class="ctrl">
-            <button id="af_stop" class="audio-btn" style="width:100%; margin-top:0;">停止播放</button>
+            <label>圆周卷积长度 N <span class="val" id="lc_N_v">6</span></label>
+            <input type="range" id="lc_N" min="2" max="16" step="1" value="6">
           </div>
         </div>
-        <div class="note" id="af_status">请选择一个音频文件，然后点击“播放滤波后音频”。</div>
+        <div class="note" id="lc_status">线性卷积长度 P = M + K − 1。当 N ≥ P 时，圆周卷积与线性卷积一致。</div>
       </div>
     </aside>
     <div class="main-content">
       <div class="panel">
-        <h2>音频滤波与播放</h2>
-        <div class="formula">本页用于演示：选择音频 → 通过滤波器 → 播放输出。</div>
-        <div class="corr-relation-cards">
-          <div class="corr-relation-card"><b>原音</b><br>先加载本地音频文件。</div>
-          <div class="corr-relation-card"><b>处理</b><br>通过所选滤波器进行频域滤波。</div>
-          <div class="corr-relation-card"><b>输出</b><br>播放滤波后的音频结果。</div>
+        <h2>线性卷积与圆周卷积的关系</h2>
+        <div class="formula">
+          线性卷积 y<sub>L</sub>(n) = x(n) * h(n)；N 点圆周卷积 y<sub>C</sub>(n) 可由 y<sub>L</sub>(n) 以 N 为周期折叠求和得到（竖式查加法）。
         </div>
-        <div class="plots compact">
-          <div class="plot full" id="af_wave"></div>
-          <div class="plot full" id="af_spec"></div>
-        </div>
+        <h3 style="font-size:15px;color:#2a5298;margin:14px 0 8px;">1. 竖式法线性卷积</h3>
+        <div class="note">与第二章「圆周卷积」页下方相同的乘法竖式：x(n) 与 h(n) 错位相乘，各行部分积相加得 y<sub>L</sub>(n)。</div>
+        <div class="conv-array-wrap" id="lc_linear_table"></div>
+      </div>
+      <div class="panel">
+        <h3 style="font-size:15px;color:#2a5298;margin:0 0 8px;">2. 竖式查加得圆周卷积</h3>
+        <div class="formula">上面一行是 y<sub>L</sub>(n)，下面一行相对上面左移 N 位；标注 n 后同列相加，得到 y<sub>C</sub>(n)。</div>
+        <div class="conv-array-wrap" id="lc_circular_table"></div>
+        <div class="note" id="lc_verify"></div>
       </div>
     </div>
   </div>
@@ -1597,7 +1588,10 @@ function openPage(pageId){
   if (pageId==='page2') { renderCS(); renderCV(); }
   if (pageId==='page3') renderFS();
   if (pageId==='page4') bindAudioUI();
-  if (pageId==='page6') renderLinearConv();
+  if (pageId==='page6') {
+    renderLinearConv();
+    requestAnimationFrame(renderLinearConv);
+  }
   if (pageId==='page12') {
     renderLinearCorr();
     requestAnimationFrame(() => {
@@ -1616,6 +1610,13 @@ function openPage(pageId){
   if (pageId==='page5') renderDistortion();
   if (pageId==='page7') { renderFFT(); }
   if (pageId==='page13') { }
+  if (pageId==='page8') {
+    renderIIRPage();
+    requestAnimationFrame(() => {
+      iirResizePlots();
+      setTimeout(iirResizePlots, 120);
+    });
+  }
   if (pageId==='page9') { renderFIRPage(); }
   if (pageId==='page10') renderZTPage();
 }
@@ -2493,25 +2494,45 @@ function renderAudioFilterPage() {
 })();
 
 function renderLinearConv() {
-  const x = parseSeq(document.getElementById('lc_x').value);
-  const h = parseSeq(document.getElementById('lc_h').value);
-  const N = +document.getElementById('lc_N').value;
-  const P = +document.getElementById('lc_P').value;
-  document.getElementById('lc_N_v').textContent = N;
-  document.getElementById('lc_P_v').textContent = P;
+  const xEl = document.getElementById('lc_x');
+  const hEl = document.getElementById('lc_h');
+  const nEl = document.getElementById('lc_N');
+  if (!xEl || !hEl || !nEl) return;
 
-  const xForText = parseSeq(document.getElementById('lc_x').value);
-  const hForText = parseSeq(document.getElementById('lc_h').value);
+  const x = parseSeq(xEl.value);
+  const h = parseSeq(hEl.value);
+  const N = +nEl.value;
+  const nVal = document.getElementById('lc_N_v');
+  if (nVal) nVal.textContent = N;
+
+  const P = x.length && h.length ? x.length + h.length - 1 : 0;
+  const statusEl = document.getElementById('lc_status');
+  if (statusEl) {
+    statusEl.textContent = P > 0
+      ? `线性卷积长度 P = ${P}，当前 N = ${N}。${N >= P ? 'N ≥ P，圆周卷积与线性卷积一致。' : 'N < P，周期折叠产生混叠，两者不一致。'}`
+      : '请输入有效的 x(n) 与 h(n)。';
+  }
+
   const tableHost = document.getElementById('lc_linear_table');
   if (tableHost) {
-    tableHost.innerHTML = buildLinConvVerticalArrayHTML(xForText, hForText);
+    tableHost.innerHTML = buildLinConvVerticalArrayHTML(x, h);
   }
   const circHost = document.getElementById('lc_circular_table');
   if (circHost) {
-    circHost.innerHTML = buildCircularConvFoldArrayHTML(xForText, hForText, N);
+    circHost.innerHTML = buildCircularConvFoldArrayHTML(x, h, N);
+  }
+
+  const verifyEl = document.getElementById('lc_verify');
+  if (verifyEl && x.length && h.length) {
+    const yLin = linConv(x, h);
+    const yCirc = circularConvFromLinearFold(yLin, N);
+    const same = N >= P && yCirc.every((v, i) => v === yLin[i]);
+    verifyEl.innerHTML = N >= P
+      ? `<b>验证：</b>y<sub>C</sub>(n) = [${yCirc.join(', ')}]${same ? '，与 y<sub>L</sub>(n) 一致。' : '。'}`
+      : `<b>混叠观察：</b>y<sub>L</sub>(n) = [${yLin.join(', ')}]，折叠后 y<sub>C</sub>(n) = [${yCirc.join(', ')}]。`;
   }
 }
-['lc_x','lc_h','lc_N','lc_P'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input', renderLinearConv); });
+['lc_x','lc_h','lc_N'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input', renderLinearConv); });
 
 /* ======================================================
    第四章：线性相关计算
@@ -4110,6 +4131,13 @@ function renderIIRPage() {
     bandstop:'当前设计目标为带阻：中频抑制、低/高频通过。'
   };
   document.getElementById('iir_status').textContent = `${desc[target]} 依据 Rp=${rp.toFixed(1)} dB、Rs=${rs.toFixed(0)} dB 与边缘频率确定原型；四类模拟低通原型对比图已更新。`;
+  requestAnimationFrame(iirResizePlots);
+}
+function iirResizePlots() {
+  ['iir_classification', 'iir_specs', 'iir_proto_mag', 'iir_proto_shape'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.data) Plotly.Plots.resize(el);
+  });
 }
 ['iir_target','iir_wp','iir_ws','iir_rp','iir_rs'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input', renderIIRPage); });
 const iirRefreshBtn = document.getElementById('iir_refresh'); if (iirRefreshBtn) iirRefreshBtn.addEventListener('click', renderIIRPage);
@@ -4355,7 +4383,6 @@ requestAnimationFrame(() => {
 renderOLAPage();
 renderFFT();
 if (window.renderDIFPage) window.renderDIFPage();
-renderIIRPage();
 renderFIRPage();
 renderZTPage();
 bindAudioUI();
