@@ -280,6 +280,7 @@
     align-self: start;
     width: 100%;
     max-width: 220px;
+    min-width: 0;
     z-index: 1;
   }
   .page-layout-two .sidebar .panel {
@@ -287,18 +288,93 @@
     padding: 14px;
     max-height: calc(100vh - 106px);
     overflow: auto;
+    min-width: 0;
   }
   .page-layout-two .sidebar h2 { margin-bottom: 10px; font-size: 16px; }
   .page-layout-two .main-content { min-width: 0; }
   .page-layout-two .controls {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 10px;
     padding: 10px;
+    min-width: 0;
+  }
+  .page-layout-two .ctrl {
+    min-width: 0;
+    max-width: 100%;
   }
   .page-layout-two .plot { min-height: 220px; }
   .page-layout-two .plots.compact .plot { min-height: 180px; }
   .page-layout-two .plots.compact .plot.full { min-height: 200px; }
   .page-layout-two .plots.compact .plot.large { min-height: 240px; }
+  #page14 .page-layout-two .sidebar {
+    min-width: 0;
+    max-width: 220px;
+  }
+  #page14 .page-layout-two .sidebar .panel {
+    padding: 12px;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+  #page14 .page-layout-two .sidebar h2 {
+    font-size: 15px;
+    word-break: break-word;
+  }
+  #page14 .page-layout-two .sidebar .formula {
+    padding: 6px 8px;
+    margin: 8px 0;
+    font-size: 12px;
+    line-height: 1.45;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+  #page14 .page-layout-two .controls {
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+    padding: 8px;
+    gap: 8px;
+  }
+  #page14 .page-layout-two .ctrl {
+    min-width: 0;
+    max-width: 100%;
+  }
+  #page14 .page-layout-two .ctrl label {
+    font-size: 12px;
+    flex-wrap: wrap;
+    gap: 2px 6px;
+    word-break: break-word;
+  }
+  #page14 .page-layout-two .ctrl input[type=number],
+  #page14 .page-layout-two .ctrl input[type=text],
+  #page14 .page-layout-two .ctrl input[type=file],
+  #page14 .page-layout-two .ctrl select,
+  #page14 .page-layout-two .ctrl input[type=range] {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  #page14 .page-layout-two .ctrl input[type=file] {
+    font-size: 11px;
+    padding: 4px 0;
+  }
+  #page14 .page-layout-two .sidebar .note {
+    font-size: 11px;
+    line-height: 1.4;
+    padding: 6px 8px;
+    margin: 8px 0;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+  #page14 .page-layout-two .audio-btn {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    font-size: 12px;
+    padding: 7px 6px;
+    white-space: normal;
+    line-height: 1.35;
+    text-align: center;
+  }
   .formula {
     background: #f4f7fb;
     border-left: 4px solid #2a5298;
@@ -841,8 +917,8 @@
           <div class="corr-relation-card"><b>步骤 3</b><br>点击播放，听滤波后的音频。</div>
         </div>
         <div class="plots compact">
-          <div class="plot full" id="af_wave"></div>
-          <div class="plot full" id="af_spec"></div>
+          <div class="plot full" id="af_wave14"></div>
+          <div class="plot full" id="af_spec14"></div>
         </div>
       </div>
     </div>
@@ -1529,7 +1605,13 @@ function openPage(pageId){
       setTimeout(renderLinearCorr, 80);
     });
   }
-  if (pageId==='page14') renderAudioFilterPage();
+  if (pageId==='page14') {
+    renderAudioFilterPage();
+    requestAnimationFrame(() => {
+      afResizePage14Plots();
+      setTimeout(afResizePage14Plots, 120);
+    });
+  }
   if (pageId==='page11') renderOLAPage();
   if (pageId==='page5') renderDistortion();
   if (pageId==='page7') { renderFFT(); }
@@ -2052,71 +2134,363 @@ function buildCircularConvFoldArrayHTML(x, h, N) {
   </table>`;
 }
 
-function renderAudioFilterPage() {
-  const fileEl = document.getElementById('af_file');
-  const typeEl = document.getElementById('af_type');
-  const fcEl = document.getElementById('af_fc');
-  const statusEl = document.getElementById('af_status');
-  const playBtn = document.getElementById('af_play');
-  const stopBtn = document.getElementById('af_stop');
-  const fc = +fcEl.value;
-  document.getElementById('af_fc_v').textContent = fc;
-  const file = fileEl.files && fileEl.files[0] ? fileEl.files[0] : null;
-  statusEl.textContent = file ? `已选择：${file.name}，滤波器：${typeEl.value}，截止频率：${fc} Hz。` : '请选择一个音频文件，然后点击“播放滤波后音频”。';
+let afFilterPlayback = null;
+let afFilterPlaybackCtx = null;
+let afCachedFile = null;
+let afCachedBuffer = null;
+let afSpecRenderToken = 0;
 
-  const f = Array.from({length: 256}, (_, i) => i * 200);
-  const ideal = f.map(v => {
-    if (typeEl.value === 'highpass') return v >= fc ? 1 : 0.08;
-    if (typeEl.value === 'bandpass') return (v >= fc*0.6 && v <= fc*1.4) ? 1 : 0.08;
-    if (typeEl.value === 'bandstop') return (v >= fc*0.6 && v <= fc*1.4) ? 0.05 : 1;
+function stopAfFilterPlayback() {
+  if (afFilterPlayback) {
+    try { afFilterPlayback.stop(); } catch(e) {}
+    try { afFilterPlayback.disconnect(); } catch(e) {}
+    afFilterPlayback = null;
+  }
+}
+
+function afIdealResponse(type, fc, freqs) {
+  return freqs.map(v => {
+    if (type === 'highpass') return v >= fc ? 1 : 0.08;
+    if (type === 'bandpass') return (v >= fc * 0.6 && v <= fc * 1.4) ? 1 : 0.08;
+    if (type === 'bandstop') return (v >= fc * 0.6 && v <= fc * 1.4) ? 0.05 : 1;
     return v <= fc ? 1 : 0.08;
   });
-  Plotly.react('af_wave', [{x:Array.from({length:ideal.length},(_,i)=>i), y:ideal, type:'scatter', mode:'lines', line:{color:'#2a5298', width:2}}], {title:'滤波器示意响应', xaxis:{title:'频率索引', gridcolor:'#eee'}, yaxis:{title:'幅值', gridcolor:'#eee', range:[0,1.1]}, height:260, margin:{t:40,b:40,l:50,r:20}, paper_bgcolor:'#fff', plot_bgcolor:'#fff'}, {responsive:true, displayModeBar:false});
-  Plotly.react('af_spec', [{x:f, y:ideal, type:'scatter', mode:'lines', line:{color:'#9b59b6', width:2}}], {title:'滤波前后频谱对比示意', xaxis:{title:'频率 / Hz', gridcolor:'#eee'}, yaxis:{title:'幅值', gridcolor:'#eee', range:[0,1.1]}, height:260, margin:{t:40,b:40,l:50,r:20}, paper_bgcolor:'#fff', plot_bgcolor:'#fff'}, {responsive:true, displayModeBar:false});
+}
+
+function afHannWindow(n) {
+  if (n <= 1) return [1];
+  return Array.from({ length: n }, (_, i) => 0.5 * (1 - Math.cos(2 * Math.PI * i / (n - 1))));
+}
+
+function afMonoSegment(buffer, fftSize, startOffset) {
+  const start = startOffset == null ? 0 : startOffset;
+  const len = Math.min(fftSize, Math.max(0, buffer.length - start));
+  const channels = buffer.numberOfChannels;
+  const win = afHannWindow(fftSize);
+  const seg = new Array(fftSize).fill(0);
+  for (let i = 0; i < len; i++) {
+    let s = 0;
+    for (let ch = 0; ch < channels; ch++) s += buffer.getChannelData(ch)[start + i];
+    seg[i] = (s / channels) * win[i];
+  }
+  return seg;
+}
+
+function afSegmentStart(buffer, segmentLength) {
+  const len = Math.min(segmentLength, buffer.length);
+  return Math.max(0, Math.floor(buffer.length / 2) - Math.floor(len / 2));
+}
+
+function afSpectrumFromSignal(samples, sampleRate) {
+  const N = samples.length;
+  const mags = dftMagReal(samples);
+  const half = Math.floor(N / 2) + 1;
+  const freqs = Array.from({ length: half }, (_, k) => k * sampleRate / N);
+  const magHalf = mags.slice(0, half);
+  const peak = Math.max(...magHalf, 1e-10);
+  return {
+    freqs,
+    mags: magHalf.map(v => v / peak)
+  };
+}
+
+async function afDecodeAudioFile(file) {
+  const arrayBuf = await file.arrayBuffer();
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) throw new Error('浏览器不支持 Web Audio API');
+  const decodeCtx = new AudioCtx();
+  if (decodeCtx.state === 'suspended') await decodeCtx.resume();
+  try {
+    return await decodeCtx.decodeAudioData(arrayBuf.slice(0));
+  } finally {
+    try { await decodeCtx.close(); } catch(e) {}
+  }
+}
+
+async function afGetAudioBuffer(file) {
+  if (!file) return null;
+  if (afCachedFile === file && afCachedBuffer) return afCachedBuffer;
+  afCachedBuffer = await afDecodeAudioFile(file);
+  afCachedFile = file;
+  return afCachedBuffer;
+}
+
+async function afFilterAudioBuffer(buffer, filterType, fc) {
+  const offline = new OfflineAudioContext(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+  const src = offline.createBufferSource();
+  src.buffer = buffer;
+  const filter = offline.createBiquadFilter();
+  filter.type = filterType;
+  filter.frequency.value = Math.min(fc, buffer.sampleRate / 2 - 1);
+  filter.Q.value = 0.707;
+  src.connect(filter);
+  filter.connect(offline.destination);
+  src.start();
+  return offline.startRendering();
+}
+
+async function afFilterAudioSegment(buffer, filterType, fc, segmentLength) {
+  const len = Math.min(segmentLength, buffer.length);
+  const channels = buffer.numberOfChannels;
+  const sr = buffer.sampleRate;
+  const start = afSegmentStart(buffer, len);
+  const offline = new OfflineAudioContext(channels, len, sr);
+  const seg = offline.createBuffer(channels, len, sr);
+  for (let ch = 0; ch < channels; ch++) {
+    seg.getChannelData(ch).set(buffer.getChannelData(ch).subarray(start, start + len));
+  }
+  const src = offline.createBufferSource();
+  src.buffer = seg;
+  const filter = offline.createBiquadFilter();
+  filter.type = filterType;
+  filter.frequency.value = Math.min(fc, sr / 2 - 1);
+  filter.Q.value = 0.707;
+  src.connect(filter);
+  filter.connect(offline.destination);
+  src.start(0);
+  return offline.startRendering();
+}
+
+const AF_FFT_SIZE = 2048;
+const AF_SPEC_LAYOUT = {
+  height: 260,
+  margin: { t: 40, b: 40, l: 50, r: 20 },
+  paper_bgcolor: '#fff',
+  plot_bgcolor: '#fff',
+  legend: { orientation: 'h', y: 1.12, x: 0 }
+};
+let afSpecDebounceTimer = null;
+
+function afResizePage14Plots() {
+  const page = document.getElementById('page14');
+  if (!page) return;
+  page.querySelectorAll('#af_wave14, #af_spec14').forEach(el => {
+    if (el.data) Plotly.Plots.resize(el);
+  });
+}
+
+function renderAfFilterResponsePlot(waveEl, filterType, fc, maxFreq) {
+  if (!waveEl) return;
+  const fMax = Math.max(maxFreq || 12000, fc * 1.2, 2000);
+  const freqs = Array.from({ length: 256 }, (_, i) => i * fMax / 255);
+  const ideal = afIdealResponse(filterType, fc, freqs);
+  Plotly.react(waveEl, [{
+    x: freqs,
+    y: ideal,
+    type: 'scatter',
+    mode: 'lines',
+    name: '理想幅频响应',
+    line: { color: '#2a5298', width: 2 }
+  }], {
+    title: `滤波器幅频响应示意（fc = ${fc} Hz）`,
+    xaxis: { title: '频率 / Hz', gridcolor: '#eee', range: [0, fMax] },
+    yaxis: { title: '相对幅值', gridcolor: '#eee', range: [0, 1.1] },
+    ...AF_SPEC_LAYOUT,
+    showlegend: false
+  }, { responsive: true, displayModeBar: false });
+}
+
+function renderAfSpecPlaceholder(specEl) {
+  if (!specEl) return;
+  Plotly.react(specEl, [], {
+    title: '滤波前后频谱对比（请先选择音频文件）',
+    xaxis: { title: '频率 / Hz', gridcolor: '#eee', range: [0, 8000] },
+    yaxis: { title: '归一化幅度', gridcolor: '#eee', range: [0, 1.1] },
+    ...AF_SPEC_LAYOUT,
+    annotations: [{
+      x: 0.5,
+      y: 0.5,
+      xref: 'paper',
+      yref: 'paper',
+      text: '选择音频后将显示滤波前/后频谱',
+      showarrow: false,
+      font: { size: 14, color: '#667' }
+    }]
+  }, { responsive: true, displayModeBar: false });
+}
+
+async function renderAfSpecComparison(specEl, buffer, filterType, fc, token) {
+  const filtered = await afFilterAudioSegment(buffer, filterType, fc, AF_FFT_SIZE);
+  if (token !== afSpecRenderToken) return;
+
+  const segStart = afSegmentStart(buffer, AF_FFT_SIZE);
+  const before = afSpectrumFromSignal(afMonoSegment(buffer, AF_FFT_SIZE, segStart), buffer.sampleRate);
+  const afterRaw = afSpectrumFromSignal(afMonoSegment(filtered, AF_FFT_SIZE, 0), filtered.sampleRate);
+  const peak = Math.max(...before.mags, 1e-10);
+  const afterMags = afterRaw.mags.map(v => v / peak);
+  const nyq = buffer.sampleRate / 2;
+
+  Plotly.react(specEl, [
+    {
+      x: before.freqs,
+      y: before.mags,
+      type: 'scatter',
+      mode: 'lines',
+      name: '滤波前',
+      line: { color: '#2a5298', width: 1.5 }
+    },
+    {
+      x: before.freqs,
+      y: afterMags,
+      type: 'scatter',
+      mode: 'lines',
+      name: '滤波后',
+      line: { color: '#e67e22', width: 1.5 }
+    }
+  ], {
+    title: `滤波前后频谱对比（${filterType}，fc = ${fc} Hz）`,
+    xaxis: { title: '频率 / Hz', gridcolor: '#eee', range: [0, nyq] },
+    yaxis: { title: '归一化幅度（相对滤波前峰值）', gridcolor: '#eee', range: [0, 1.1] },
+    ...AF_SPEC_LAYOUT
+  }, { responsive: true, displayModeBar: false });
+  requestAnimationFrame(afResizePage14Plots);
+}
+
+function updateAfSpecCharts(page, file, filterType, fc, waveEl, specEl, token) {
+  if (waveEl) renderAfFilterResponsePlot(waveEl, filterType, fc);
+  if (!specEl) return;
+
+  if (!file) {
+    renderAfSpecPlaceholder(specEl);
+    return;
+  }
+
+  Plotly.react(specEl, [], {
+    title: '正在计算滤波前后频谱...',
+    xaxis: { title: '频率 / Hz', gridcolor: '#eee' },
+    yaxis: { title: '归一化幅度', gridcolor: '#eee', range: [0, 1.1] },
+    ...AF_SPEC_LAYOUT
+  }, { responsive: true, displayModeBar: false });
+
+  afGetAudioBuffer(file).then(buffer => {
+    if (!buffer || token !== afSpecRenderToken) return;
+    if (waveEl) renderAfFilterResponsePlot(waveEl, filterType, fc, buffer.sampleRate / 2);
+    return renderAfSpecComparison(specEl, buffer, filterType, fc, token);
+  }).catch(err => {
+    if (token !== afSpecRenderToken) return;
+    console.error('audio spectrum failed:', err);
+    Plotly.react(specEl, [], {
+      title: '频谱计算失败',
+      ...AF_SPEC_LAYOUT,
+      annotations: [{
+        x: 0.5,
+        y: 0.5,
+        xref: 'paper',
+        yref: 'paper',
+        text: err && err.message ? err.message : '无法解码该音频文件',
+        showarrow: false,
+        font: { size: 13, color: '#c0392b' }
+      }]
+    }, { responsive: true, displayModeBar: false });
+  });
+}
+
+function renderAudioFilterPage() {
+  const page = document.getElementById('page14');
+  if (!page) return;
+  const fileEl = page.querySelector('#af_file');
+  const typeEl = page.querySelector('#af_type');
+  const fcEl = page.querySelector('#af_fc');
+  const statusEl = page.querySelector('#af_status');
+  const playBtn = page.querySelector('#af_play');
+  const stopBtn = page.querySelector('#af_stop');
+  const fcV = page.querySelector('#af_fc_v');
+  if (!fileEl || !typeEl || !fcEl || !statusEl) return;
+
+  const fc = +fcEl.value;
+  const filterType = typeEl.value;
+  if (fcV) fcV.textContent = fc;
+  const file = fileEl.files && fileEl.files[0] ? fileEl.files[0] : null;
+  statusEl.textContent = file
+    ? `已选择：${file.name}，滤波器：${filterType}，截止频率：${fc} Hz。`
+    : '请选择一个音频文件，然后点击“播放滤波后音频”。';
+
+  const waveEl = page.querySelector('#af_wave14');
+  const specEl = page.querySelector('#af_spec14');
+  const token = ++afSpecRenderToken;
+
+  if (!file) {
+    afCachedFile = null;
+    afCachedBuffer = null;
+    if (waveEl) renderAfFilterResponsePlot(waveEl, filterType, fc);
+    if (specEl) renderAfSpecPlaceholder(specEl);
+  } else {
+    if (waveEl) {
+      renderAfFilterResponsePlot(
+        waveEl,
+        filterType,
+        fc,
+        afCachedBuffer ? afCachedBuffer.sampleRate / 2 : undefined
+      );
+    }
+    clearTimeout(afSpecDebounceTimer);
+    afSpecDebounceTimer = setTimeout(() => {
+      updateAfSpecCharts(page, file, filterType, fc, waveEl, specEl, token);
+    }, fileEl.dataset.justLoaded === '1' ? 0 : 150);
+    fileEl.dataset.justLoaded = '0';
+  }
 
   if (playBtn && playBtn.dataset.bound !== '1') {
     playBtn.dataset.bound = '1';
     playBtn.addEventListener('click', async () => {
-      if (!file) { statusEl.textContent = '请先选择一个音频文件。'; return; }
+      const currentFile = fileEl.files && fileEl.files[0] ? fileEl.files[0] : null;
+      if (!currentFile) { statusEl.textContent = '请先选择一个音频文件。'; return; }
+      const currentFc = +fcEl.value;
+      const currentType = typeEl.value;
       try {
+        stopAfFilterPlayback();
+        const rendered = await afFilterAudioBuffer(
+          await afGetAudioBuffer(currentFile),
+          currentType,
+          currentFc
+        );
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        const ctx = new AudioCtx();
-        const arrayBuf = await file.arrayBuffer();
-        const audioBuf = await ctx.decodeAudioData(arrayBuf.slice(0));
-        const offline = new OfflineAudioContext(audioBuf.numberOfChannels, audioBuf.length, audioBuf.sampleRate);
-        const src = offline.createBufferSource();
-        src.buffer = audioBuf;
-        const filter = offline.createBiquadFilter();
-        filter.type = typeEl.value;
-        filter.frequency.value = fc;
-        filter.Q.value = 0.707;
-        src.connect(filter);
-        filter.connect(offline.destination);
-        src.start();
-        const rendered = await offline.startRendering();
-        const playCtx = new AudioCtx();
-        const out = playCtx.createBufferSource();
+        if (!AudioCtx) throw new Error('浏览器不支持 Web Audio API');
+        if (!afFilterPlaybackCtx || afFilterPlaybackCtx.state === 'closed') {
+          afFilterPlaybackCtx = new AudioCtx();
+        }
+        if (afFilterPlaybackCtx.state === 'suspended') await afFilterPlaybackCtx.resume();
+        const out = afFilterPlaybackCtx.createBufferSource();
         out.buffer = rendered;
-        out.connect(playCtx.destination);
+        out.connect(afFilterPlaybackCtx.destination);
+        afFilterPlayback = out;
         out.start();
-        statusEl.textContent = `正在播放滤波后音频：${file.name}。`;
-        out.onended = () => statusEl.textContent = `播放完成：${file.name}。`;
+        statusEl.textContent = `正在播放滤波后音频：${currentFile.name}。`;
+        out.onended = () => {
+          afFilterPlayback = null;
+          statusEl.textContent = `播放完成：${currentFile.name}。`;
+        };
       } catch (e) {
-        statusEl.textContent = '音频处理失败，请检查浏览器音频权限或文件格式。';
+        console.error('audio filter playback failed:', e);
+        statusEl.textContent = e && e.message
+          ? `音频处理失败：${e.message}`
+          : '音频处理失败，请检查浏览器音频权限或文件格式。';
       }
     });
   }
   if (stopBtn && stopBtn.dataset.bound !== '1') {
     stopBtn.dataset.bound = '1';
-    stopBtn.addEventListener('click', () => { statusEl.textContent = '已停止播放。'; });
+    stopBtn.addEventListener('click', () => {
+      stopAfFilterPlayback();
+      statusEl.textContent = '已停止播放。';
+    });
   }
 }
-const afFileEl = document.getElementById('af_file');
-const afTypeEl = document.getElementById('af_type');
-const afFcEl = document.getElementById('af_fc');
-if (afFileEl) afFileEl.addEventListener('change', renderAudioFilterPage);
-if (afTypeEl) afTypeEl.addEventListener('input', renderAudioFilterPage);
-if (afFcEl) afFcEl.addEventListener('input', renderAudioFilterPage);
+(function bindAudioFilterPage() {
+  const page = document.getElementById('page14');
+  if (!page) return;
+  const afFileEl = page.querySelector('#af_file');
+  const afTypeEl = page.querySelector('#af_type');
+  const afFcEl = page.querySelector('#af_fc');
+  if (afFileEl) afFileEl.addEventListener('change', () => {
+    afFileEl.dataset.justLoaded = '1';
+    afCachedFile = null;
+    afCachedBuffer = null;
+    renderAudioFilterPage();
+  });
+  if (afTypeEl) afTypeEl.addEventListener('input', renderAudioFilterPage);
+  if (afFcEl) afFcEl.addEventListener('input', renderAudioFilterPage);
+})();
 
 function renderLinearConv() {
   const x = parseSeq(document.getElementById('lc_x').value);
@@ -3978,14 +4352,12 @@ requestAnimationFrame(() => {
   renderLinearCorr();
   setTimeout(renderLinearCorr, 80);
 });
-renderAudioFilterPage();
 renderOLAPage();
 renderFFT();
 if (window.renderDIFPage) window.renderDIFPage();
 renderIIRPage();
 renderFIRPage();
 renderZTPage();
-renderAudioFilterPage();
 bindAudioUI();
 
 </script>
